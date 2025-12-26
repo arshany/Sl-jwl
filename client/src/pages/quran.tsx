@@ -12,6 +12,8 @@ export default function QuranIndex() {
   const [search, setSearch] = useState("");
   const [lastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
 
+  console.log("QuranIndex rendered, surahMetadata count:", surahMetadata.length);
+
   const filteredSurahs = useMemo(() => {
     if (!search.trim()) return surahMetadata;
     
@@ -21,6 +23,8 @@ export default function QuranIndex() {
         s.english.toLowerCase().includes(search.toLowerCase())
     );
   }, [search]);
+
+  console.log("Filtered surahs count:", filteredSurahs.length);
 
   return (
     <div className="min-h-screen bg-background pb-24 pt-10 px-4 space-y-6">
