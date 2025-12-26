@@ -1,31 +1,26 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Repeat } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Check, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { athkarData } from "@/lib/athkar-data";
+import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from "@/lib/use-local-storage";
 
-const athkarData = {
-  morning: [
-    { text: "أَصْـبَحْنا وَأَصْـبَحَ المُـلْكُ لله وَالحَمدُ لله ، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلْكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير", count: 1 },
-    { text: "اللّهُـمَّ إِنِّـي أَسْـأَلُـكَ خَـيْرَ هـذا الـيَوْم ، فَـتْحَهُ ، وَنَصْـرَهُ ، وَنـورَهُ وَبَـرَكَـتَهُ ، وَهُـداهُ ، وَأَعـوذُ بِـكَ مِـنْ شَـرِّ ما فـيهِ وَشَـرِّ ما بَعْـدَه", count: 1 },
-    { text: "سُبْحـانَ اللهِ وَبِحَمْـدِهِ عَدَدَ خَلْـقِه ، وَرِضـا نَفْسِـه ، وَزِنَـةَ عَـرْشِـه ، وَمِـدادَ كَلِمـاتِـه", count: 3 },
-  ],
-  evening: [
-    { text: "أَمْسَيْـنا وَأَمْسـى المـلكُ لله وَالحَمدُ لله ، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلْكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير", count: 1 },
-    { text: "اللّهُـمَّ بِكَ أَمْسَـينا وَبِكَ أَصْـبَحْنا، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ الْمَصِير", count: 1 },
-  ],
-  prayer: [
-    { text: "أَسْـتَغْفِرُ الله", count: 3 },
-    { text: "اللّهُـمَّ أَنْـتَ السَّلامُ ، وَمِـنْكَ السَّلام ، تَبارَكْتَ يا ذا الجَـلالِ وَالإِكْـرام", count: 1 },
-    { text: "سُبْـحانَ الله", count: 33 },
-    { text: "الحَمْـدُ لله", count: 33 },
-    { text: "اللهُ أكْـبَر", count: 33 },
-  ]
-};
+type CategoryKey = keyof typeof athkarData;
+
+const categories: { id: CategoryKey; label: string; icon: string; desc: string }[] = [
+  { id: 'morning', label: 'أذكار الصباح', icon: '🌅', desc: 'بداية يومك بذكر الله' },
+  { id: 'evening', label: 'أذكار المساء', icon: '🌃', desc: 'حصن نفسك في المساء' },
+  { id: 'prayer', label: 'أذكار الصلاة', icon: '🤲', desc: 'التسبيح والتهليل' },
+  { id: 'sleep', label: 'أذكار النوم', icon: '🛌', desc: 'قبل النوم' },
+  { id: 'waking', label: 'أذكار الاستيقاظ', icon: '☀️', desc: 'عند الاستيقاظ' },
+  { id: 'travel', label: 'أذكار السفر', icon: '✈️', desc: 'دعاء السفر' },
+];
 
 export default function AthkarPage() {
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof athkarData | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
 
   return (
     <div className="min-h-screen bg-background pb-24 pt-10 px-4">
@@ -40,35 +35,25 @@ export default function AthkarPage() {
           >
             <h1 className="text-2xl font-bold mb-6 text-primary">الأذكار</h1>
             
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setSelectedCategory('morning')}>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold">أذكار الصباح</h3>
-                  <p className="text-sm text-muted-foreground">بداية يومك بذكر الله</p>
-                </div>
-                <div className="bg-primary/10 p-2 rounded-full text-primary">🌅</div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setSelectedCategory('evening')}>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold">أذكار المساء</h3>
-                  <p className="text-sm text-muted-foreground">حصن نفسك في المساء</p>
-                </div>
-                <div className="bg-primary/10 p-2 rounded-full text-primary">🌃</div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setSelectedCategory('prayer')}>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold">أذكار بعد الصلاة</h3>
-                  <p className="text-sm text-muted-foreground">التسبيح والتهليل</p>
-                </div>
-                <div className="bg-primary/10 p-2 rounded-full text-primary">🤲</div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {categories.map((cat) => (
+                <Card 
+                  key={cat.id}
+                  className="cursor-pointer hover:bg-accent/50 transition-colors border-l-4 border-l-primary/0 hover:border-l-primary"
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  <CardContent className="p-6 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center gap-2">
+                        <span>{cat.icon}</span> {cat.label}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mr-8">{cat.desc}</p>
+                    </div>
+                    <ArrowLeft className="h-5 w-5 text-muted-foreground/30" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </motion.div>
         ) : (
           <AthkarDetail 
@@ -82,26 +67,43 @@ export default function AthkarPage() {
   );
 }
 
-function AthkarDetail({ category, data, onBack }: { category: string, data: { text: string, count: number }[], onBack: () => void }) {
+function AthkarDetail({ category, data, onBack }: { category: string, data: typeof athkarData['morning'], onBack: () => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [counter, setCounter] = useState(data[0].count);
-  const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
+  const [progress, setProgress] = useLocalStorage<Record<string, number>>(`athkar-progress-${new Date().toDateString()}`, {});
 
   const currentThikr = data[currentIndex];
   
+  // Update counter when index changes
+  useEffect(() => {
+    setCounter(currentThikr.count);
+  }, [currentIndex, currentThikr]);
+
   const handleTap = () => {
     if (counter > 1) {
       setCounter(c => c - 1);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(5);
     } else {
       if (currentIndex < data.length - 1) {
+        // Mark progress
+        setProgress(prev => ({ ...prev, [category]: (prev[category] || 0) + 1 }));
+        
         setCurrentIndex(c => c + 1);
-        setCounter(data[currentIndex + 1].count);
-        setProgress(((currentIndex + 1) / data.length) * 100);
+        if (navigator.vibrate) navigator.vibrate(20);
       } else {
-        // Finished
+        // Finished category
+        setProgress(prev => ({ ...prev, [category]: (prev[category] || 0) + 1 }));
+        toast({ title: "أحسنت!", description: "لقد أتممت الأذكار" });
         onBack();
       }
     }
+  };
+
+  const copyText = () => {
+    navigator.clipboard.writeText(currentThikr.text);
+    toast({ description: "تم نسخ الذكر" });
   };
 
   return (
@@ -110,45 +112,53 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: { te
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="flex flex-col h-[80vh]"
+      className="flex flex-col h-[85vh]"
     >
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-4">
         <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowRight className="h-6 w-6" /> {/* RTL arrow */}
         </Button>
         <h2 className="text-xl font-bold mr-2">
-          {category === 'morning' ? 'أذكار الصباح' : category === 'evening' ? 'أذكار المساء' : 'أذكار الصلاة'}
+          {categories.find(c => c.id === category)?.label}
         </h2>
+        <div className="mr-auto text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-mono">
+          {currentIndex + 1} / {data.length}
+        </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-primary/20">
-          <CardContent className="p-8 text-center">
-            <p className="text-2xl leading-loose font-serif text-foreground/90">
+      <div className="flex-1 flex flex-col space-y-4">
+        <Card className="flex-1 bg-card/50 backdrop-blur-sm border-primary/10 shadow-sm overflow-auto">
+          <CardContent className="p-6 text-center flex flex-col justify-center h-full min-h-[300px]">
+            <p className="text-2xl md:text-3xl leading-[2] md:leading-[2.2] font-serif text-foreground/90 font-medium">
               {currentThikr.text}
             </p>
+            {currentThikr.source && (
+              <p className="text-sm text-muted-foreground mt-6 font-light">
+                {currentThikr.source}
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        <div 
-          onClick={handleTap}
-          className="w-40 h-40 rounded-full bg-primary text-primary-foreground flex flex-col items-center justify-center cursor-pointer shadow-lg active:scale-95 transition-transform select-none"
-        >
-          <span className="text-5xl font-bold font-mono">{counter}</span>
-          <span className="text-xs opacity-80 mt-1">اضغط للتسبيح</span>
+        <div className="flex justify-center gap-4 py-2">
+          <Button variant="outline" size="sm" onClick={copyText} className="gap-2">
+            <Copy className="h-4 w-4" /> نسخ
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Share2 className="h-4 w-4" /> مشاركة
+          </Button>
         </div>
-      </div>
 
-      <div className="mt-8">
-        <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>{currentIndex + 1} / {data.length}</span>
-          <span>التقدم</span>
-        </div>
-        <div className="h-2 bg-secondary/20 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${((currentIndex) / data.length) * 100}%` }}
-          />
+        {/* Counter Area */}
+        <div className="pb-8 pt-4 flex flex-col items-center">
+            <div 
+            onClick={handleTap}
+            className="relative w-28 h-28 rounded-full bg-primary text-primary-foreground flex flex-col items-center justify-center cursor-pointer shadow-xl active:scale-95 transition-transform select-none ring-4 ring-primary/20 hover:ring-primary/40"
+            >
+                <div className="absolute inset-0 rounded-full border-4 border-white/20 border-t-white animate-spin duration-3000" style={{ animationDuration: '10s' }} />
+                <span className="text-4xl font-bold font-mono z-10">{counter}</span>
+                <span className="text-[10px] opacity-80 mt-1 z-10">اضغط</span>
+            </div>
         </div>
       </div>
     </motion.div>

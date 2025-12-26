@@ -1,30 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Bookmark, BookOpen } from "lucide-react";
 import { Link, Route, Switch } from "wouter";
-
-// Simplified list of Surahs
-const surahs = [
-  { number: 1, name: "الفاتحة", verses: 7, type: "Meccan" },
-  { number: 2, name: "البقرة", verses: 286, type: "Medinan" },
-  { number: 3, name: "آل عمران", verses: 200, type: "Medinan" },
-  { number: 4, name: "النساء", verses: 176, type: "Medinan" },
-  { number: 5, name: "المائدة", verses: 120, type: "Medinan" },
-  { number: 6, name: "الأنعام", verses: 165, type: "Meccan" },
-  { number: 7, name: "الأعراف", verses: 206, type: "Meccan" },
-  { number: 8, name: "الأنفال", verses: 75, type: "Medinan" },
-  { number: 9, name: "التوبة", verses: 129, type: "Medinan" },
-  { number: 10, name: "يونس", verses: 109, type: "Meccan" },
-  { number: 18, name: "الكهف", verses: 110, type: "Meccan" },
-  { number: 36, name: "يس", verses: 83, type: "Meccan" },
-  { number: 55, name: "الرحمن", verses: 78, type: "Medinan" },
-  { number: 56, name: "الواقعة", verses: 96, type: "Meccan" },
-  { number: 67, name: "الملك", verses: 30, type: "Meccan" },
-  { number: 112, name: "الإخلاص", verses: 4, type: "Meccan" },
-  { number: 113, name: "الفلق", verses: 5, type: "Meccan" },
-  { number: 114, name: "الناس", verses: 6, type: "Meccan" },
-];
+import { surahMetadata, juzAmmaText } from "@/lib/quran-data";
+import { useLocalStorage } from "@/lib/use-local-storage";
+import { Button } from "@/components/ui/button";
 
 export default function QuranRouter() {
   return (
@@ -37,18 +18,41 @@ export default function QuranRouter() {
 
 function QuranIndex() {
   const [search, setSearch] = useState("");
+  const [lastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
 
-  const filteredSurahs = surahs.filter(s => s.name.includes(search));
+  const filteredSurahs = useMemo(() => {
+    return surahMetadata.filter(s => 
+        s.name.includes(search) || 
+        s.number.toString().includes(search) ||
+        s.english.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
 
   return (
     <div className="min-h-screen bg-background pb-24 pt-10 px-4 space-y-6">
       <h1 className="text-2xl font-bold text-primary mb-6">القرآن الكريم</h1>
       
+      {/* Last Read Banner */}
+      {lastRead && (
+         <Link href={`/quran/${lastRead.surah}`}>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex justify-between items-center cursor-pointer mb-6">
+                <div>
+                    <p className="text-xs text-primary font-bold mb-1">تابِع قراءتك</p>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        سورة {lastRead.name}
+                    </h3>
+                </div>
+                <Button size="sm" variant="secondary">تابع</Button>
+            </div>
+         </Link>
+      )}
+
       <div className="relative">
         <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input 
           className="pr-9" 
-          placeholder="بحث عن سورة..." 
+          placeholder="بحث باسم السورة..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -60,13 +64,17 @@ function QuranIndex() {
             <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="bg-secondary/10 text-secondary-foreground font-bold h-10 w-10 rounded-full flex items-center justify-center text-sm border border-secondary/20">
-                    {surah.number}
+                  <div className="relative flex items-center justify-center h-10 w-10">
+                     <div className="absolute inset-0 border-2 border-secondary/30 rounded-full rotate-45" />
+                     <span className="font-bold text-sm">{surah.number}</span>
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">{surah.name}</h3>
                     <p className="text-xs text-muted-foreground">{surah.type === 'Meccan' ? 'مكية' : 'مدنية'} • {surah.verses} آيات</p>
                   </div>
+                </div>
+                <div className="text-xs text-muted-foreground font-serif tracking-widest opacity-50">
+                    {surah.english}
                 </div>
               </CardContent>
             </Card>
@@ -79,31 +87,64 @@ function QuranIndex() {
 
 function QuranReader({ params }: { params: { id: string } }) {
   const id = parseInt(params.id);
-  const surah = surahs.find(s => s.number === id);
+  const surah = surahMetadata.find(s => s.number === id);
+  const text = juzAmmaText[id];
+  const [lastRead, setLastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
+
+  // Auto-save last read
+  if (surah && (!lastRead || lastRead.surah !== id)) {
+      setLastRead({ surah: id, name: surah.name });
+  }
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] dark:bg-background pb-24 pt-6 px-4">
-      <div className="text-center mb-8 border-b border-border/10 pb-4">
-        <h1 className="text-3xl font-serif font-bold text-primary mb-2">سورة {surah?.name}</h1>
-        <p className="text-sm text-muted-foreground">بسم الله الرحمن الرحيم</p>
+    <div className="min-h-screen bg-[#fdfbf7] dark:bg-zinc-950 pb-24 pt-6 px-4">
+       <div className="flex items-center justify-between mb-8 border-b border-border/10 pb-4">
+         <Link href="/quran">
+            <Button variant="ghost" size="icon"><ArrowRight className="h-5 w-5" /></Button>
+         </Link>
+         <div className="text-center">
+            <h1 className="text-2xl font-serif font-bold text-primary">سورة {surah?.name}</h1>
+            <p className="text-xs text-muted-foreground">{surah?.type === 'Meccan' ? 'مكية' : 'مدنية'} • {surah?.verses} آيات</p>
+         </div>
+         <Button variant="ghost" size="icon"><Bookmark className="h-5 w-5" /></Button>
       </div>
 
       <div className="max-w-2xl mx-auto text-center space-y-8 px-2">
-        {/* Placeholder verses logic */}
-        <p className="text-2xl leading-[2.5] font-serif text-foreground/90" dir="rtl">
-           {/* Simple placeholder text since we don't have the full Quran text DB */}
-           {id === 1 ? (
-             <>
-               الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ۝ الرَّحْمَنِ الرَّحِيمِ ۝ مَالِكِ يَوْمِ الدِّينِ ۝ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ۝ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ
-             </>
-           ) : (
-             <span className="opacity-70 italic">
-               (نص السورة غير متوفر في وضع المعاينة. سيتم تحميل النص الكامل في النسخة النهائية)
-               <br/>
-               قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ
-             </span>
-           )}
-        </p>
+        {text ? (
+            <>
+                <div className="font-serif text-xl mb-6 text-foreground/70">بسم الله الرحمن الرحيم</div>
+                <p className="text-2xl md:text-3xl leading-[2.6] md:leading-[2.8] font-serif text-foreground/90 text-justify" dir="rtl">
+                    {text}
+                </p>
+            </>
+        ) : (
+            <div className="py-20 text-center space-y-4">
+                <p className="text-muted-foreground italic">
+                  نص هذه السورة غير متوفر في وضع عدم الاتصال (Mockup Mode).
+                  <br />
+                  تم توفير "جزء عم" فقط كنماذج.
+                </p>
+                <Button variant="outline">تحميل السورة (تجريبي)</Button>
+            </div>
+        )}
+      </div>
+      
+      {/* Navigation Buttons */}
+      <div className="fixed bottom-24 left-0 right-0 px-6 flex justify-between pointer-events-none">
+         {id < 114 && (
+             <Link href={`/quran/${id + 1}`}>
+                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary">
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+             </Link>
+         )}
+         {id > 1 && (
+             <Link href={`/quran/${id - 1}`}>
+                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary">
+                    <ArrowRight className="h-5 w-5" />
+                </Button>
+             </Link>
+         )}
       </div>
     </div>
   );

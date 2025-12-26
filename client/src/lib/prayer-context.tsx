@@ -12,13 +12,15 @@ interface AppSettings {
   asrMadhab: 'Shafi' | 'Hanafi';
   notifications: Record<string, 'sound' | 'vibrate' | 'silent'>;
   theme: 'light' | 'dark';
+  defaultAdhan: string;
+  adjustments: { fajr: number; isha: number }; // In minutes
 }
 
 interface PrayerContextType {
   settings: AppSettings;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   prayerTimes: PrayerTimes | null;
-  nextPrayer: string; // Changed from Prayer type to string to avoid TS issues
+  nextPrayer: string;
   timeToNextPrayer: string;
   locationError: string | null;
   loading: boolean;
@@ -39,6 +41,8 @@ const defaultSettings: AppSettings = {
     isha: 'sound',
   },
   theme: 'light',
+  defaultAdhan: 'makkah',
+  adjustments: { fajr: 0, isha: 0 },
 };
 
 const PrayerContext = createContext<PrayerContextType | undefined>(undefined);
@@ -93,19 +97,23 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
     } else {
       params.madhab = Madhab.Shafi;
     }
+    
+    if (settings.adjustments) {
+        params.adjustments.fajr = settings.adjustments.fajr || 0;
+        params.adjustments.isha = settings.adjustments.isha || 0;
+    }
 
     try {
       const times = new PrayerTimes(coordinates, date, params);
       setPrayerTimes(times);
       
-      const current = times.currentPrayer();
       const next = times.nextPrayer();
       setNextPrayer(next);
       
     } catch (e) {
       console.error("Error calculating times", e);
     }
-  }, [settings.latitude, settings.longitude, settings.method, settings.asrMadhab]);
+  }, [settings.latitude, settings.longitude, settings.method, settings.asrMadhab, settings.adjustments]);
 
   useEffect(() => {
     if (!prayerTimes) return;
