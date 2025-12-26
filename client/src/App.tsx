@@ -1,16 +1,24 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { PrayerProvider } from "@/lib/prayer-context";
+import { BottomNav } from "@/components/bottom-nav";
+import HomePage from "@/pages/home";
+import AthkarPage from "@/pages/athkar";
+import QuranRouter from "@/pages/quran";
+import SettingsPage from "@/pages/settings";
+import QiblaPage from "@/pages/qibla";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
+      <Route path="/" component={HomePage} />
+      <Route path="/quran*" component={QuranRouter} />
+      <Route path="/athkar" component={AthkarPage} />
+      <Route path="/qibla" component={QiblaPage} />
+      <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -19,10 +27,13 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <PrayerProvider>
+        <div dir="rtl" className="font-sans antialiased bg-background text-foreground min-h-screen selection:bg-primary/20">
+          <Router />
+          <BottomNav />
+          <Toaster />
+        </div>
+      </PrayerProvider>
     </QueryClientProvider>
   );
 }
