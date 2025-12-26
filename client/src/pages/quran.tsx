@@ -2,18 +2,19 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Bookmark, BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
-import { Link, Route, Switch } from "wouter";
+import { Link, useRoute } from "wouter";
 import { surahMetadata, juzAmmaText } from "@/lib/quran-data";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { Button } from "@/components/ui/button";
 
-export default function QuranRouter() {
-  return (
-    <Switch>
-      <Route path="/quran" component={QuranIndex} />
-      <Route path="/quran/:id" component={QuranReader} />
-    </Switch>
-  );
+export default function QuranPage() {
+  const [, params] = useRoute("/quran/:id");
+  
+  if (params?.id) {
+    return <QuranReader id={parseInt(params.id)} />;
+  }
+  
+  return <QuranIndex />;
 }
 
 function QuranIndex() {
@@ -32,9 +33,8 @@ function QuranIndex() {
     <div className="min-h-screen bg-background pb-24 pt-10 px-4 space-y-6">
       <h1 className="text-2xl font-bold text-primary mb-6">القرآن الكريم</h1>
       
-      {/* Last Read Banner */}
       {lastRead && (
-         <Link href={`/quran/${lastRead.surah}`}>
+         <Link href={`/quran/${lastRead.surah}`} className="block">
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex justify-between items-center cursor-pointer mb-6">
                 <div>
                     <p className="text-xs text-primary font-bold mb-1">تابِع قراءتك</p>
@@ -55,13 +55,14 @@ function QuranIndex() {
           placeholder="بحث باسم السورة..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          data-testid="input-search-surah"
         />
       </div>
 
       <div className="grid gap-3">
         {filteredSurahs.map((surah) => (
-          <Link key={surah.number} href={`/quran/${surah.number}`}>
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+          <Link key={surah.number} href={`/quran/${surah.number}`} className="block">
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" data-testid={`card-surah-${surah.number}`}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="relative flex items-center justify-center h-10 w-10">
@@ -85,13 +86,11 @@ function QuranIndex() {
   );
 }
 
-function QuranReader({ params }: { params: { id: string } }) {
-  const id = parseInt(params.id);
+function QuranReader({ id }: { id: number }) {
   const surah = surahMetadata.find(s => s.number === id);
   const text = juzAmmaText[id];
   const [lastRead, setLastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
 
-  // Auto-save last read
   if (surah && (!lastRead || lastRead.surah !== id)) {
       setLastRead({ surah: id, name: surah.name });
   }
@@ -100,47 +99,48 @@ function QuranReader({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-[#fdfbf7] dark:bg-zinc-950 pb-24 pt-6 px-4">
        <div className="flex items-center justify-between mb-8 border-b border-border/10 pb-4">
          <Link href="/quran">
-            <Button variant="ghost" size="icon"><ArrowRight className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" data-testid="button-back"><ArrowRight className="h-5 w-5" /></Button>
          </Link>
          <div className="text-center">
             <h1 className="text-2xl font-serif font-bold text-primary">سورة {surah?.name}</h1>
             <p className="text-xs text-muted-foreground">{surah?.type === 'Meccan' ? 'مكية' : 'مدنية'} • {surah?.verses} آيات</p>
          </div>
-         <Button variant="ghost" size="icon"><Bookmark className="h-5 w-5" /></Button>
+         <Button variant="ghost" size="icon" data-testid="button-bookmark"><Bookmark className="h-5 w-5" /></Button>
       </div>
 
       <div className="max-w-2xl mx-auto text-center space-y-8 px-2">
         {text ? (
             <>
-                <div className="font-serif text-xl mb-6 text-foreground/70">بسم الله الرحمن الرحيم</div>
-                <p className="text-2xl md:text-3xl leading-[2.6] md:leading-[2.8] font-serif text-foreground/90 text-justify" dir="rtl">
+                {id !== 1 && id !== 9 && (
+                  <div className="font-serif text-xl mb-6 text-foreground/70">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                )}
+                <p className="text-2xl md:text-3xl leading-[2.6] md:leading-[2.8] font-serif text-foreground/90 text-justify" dir="rtl" data-testid="text-surah-content">
                     {text}
                 </p>
             </>
         ) : (
             <div className="py-20 text-center space-y-4">
                 <p className="text-muted-foreground italic">
-                  نص هذه السورة غير متوفر في وضع عدم الاتصال (Mockup Mode).
+                  نص هذه السورة غير متوفر حالياً في وضع عدم الاتصال.
                   <br />
-                  تم توفير "جزء عم" فقط كنماذج.
+                  تم توفير سور جزء عم فقط كنماذج.
                 </p>
-                <Button variant="outline">تحميل السورة (تجريبي)</Button>
             </div>
         )}
       </div>
       
-      {/* Navigation Buttons */}
       <div className="fixed bottom-24 left-0 right-0 px-6 flex justify-between pointer-events-none">
          {id < 114 && (
              <Link href={`/quran/${id + 1}`}>
-                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary">
+                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary" data-testid="button-next-surah">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
              </Link>
          )}
+         <div className="flex-1" />
          {id > 1 && (
              <Link href={`/quran/${id - 1}`}>
-                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary">
+                <Button className="pointer-events-auto rounded-full shadow-lg h-12 w-12" size="icon" variant="secondary" data-testid="button-prev-surah">
                     <ArrowRight className="h-5 w-5" />
                 </Button>
              </Link>

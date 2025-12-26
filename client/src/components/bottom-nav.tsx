@@ -19,14 +19,12 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.href} href={item.href}>
-              <a className={cn(
+            <Link key={item.href} href={item.href} className={cn(
                 "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}>
                 <item.icon className={cn("h-6 w-6", isActive && "fill-current/20")} strokeWidth={isActive ? 2.5 : 2} />
                 <span className="text-[10px] font-medium">{item.label}</span>
-              </a>
             </Link>
           );
         })}
