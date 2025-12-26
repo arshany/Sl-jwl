@@ -2,13 +2,14 @@ import { usePrayer } from "@/lib/prayer-context";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { Settings, RefreshCw, ChevronLeft, Share2, Compass } from "lucide-react";
+import { Settings, RefreshCw, ChevronLeft, Share2, Compass, MapPin, Navigation, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Prayer } from "adhan";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { getDirectionsUrl } from "@/lib/mosque-finder";
 
 // Daily content data
 const dailyVerses = [
@@ -43,7 +44,7 @@ function getDailyContent() {
 }
 
 export default function HomePage() {
-  const { prayerTimes, nextPrayer, timeToNextPrayer, settings, refreshLocation } = usePrayer();
+  const { prayerTimes, nextPrayer, timeToNextPrayer, settings, refreshLocation, nearestMosque, mosqueLoading, refreshMosque } = usePrayer();
   const [lastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
   const dailyContent = getDailyContent();
   
@@ -141,6 +142,80 @@ export default function HomePage() {
             );
           })}
         </div>
+      </div>
+
+      {/* Nearest Mosque Widget */}
+      <div className="px-4 mb-6">
+        <Card className="bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground">أقرب مسجد</h3>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-primary"
+                onClick={refreshMosque}
+                disabled={mosqueLoading}
+                data-testid="btn-refresh-mosque"
+              >
+                {mosqueLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {mosqueLoading && !nearestMosque ? (
+              <div className="text-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary mb-2" />
+                <p className="text-sm text-muted-foreground">جاري البحث عن أقرب مسجد...</p>
+              </div>
+            ) : nearestMosque ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="font-semibold text-foreground" data-testid="text-mosque-name">{nearestMosque.name}</p>
+                  <p className="text-sm text-muted-foreground" data-testid="text-mosque-distance">
+                    {nearestMosque.distance < 1000 
+                      ? `${nearestMosque.distance} متر` 
+                      : `${(nearestMosque.distance / 1000).toFixed(1)} كم`}
+                  </p>
+                </div>
+                <a 
+                  href={getDirectionsUrl(nearestMosque.lat, nearestMosque.lng)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90" 
+                    data-testid="btn-open-mosque-directions"
+                  >
+                    <Navigation className="h-4 w-4 ml-2" />
+                    توجه الآن
+                  </Button>
+                </a>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground mb-3">اضغط على تحديث لإيجاد أقرب مسجد</p>
+                <Button 
+                  variant="outline" 
+                  onClick={refreshMosque}
+                  data-testid="btn-find-mosque"
+                >
+                  <MapPin className="h-4 w-4 ml-2" />
+                  البحث عن مسجد
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Continue Reading Quran */}
