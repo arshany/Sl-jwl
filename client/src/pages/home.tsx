@@ -2,29 +2,54 @@ import { usePrayer } from "@/lib/prayer-context";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { MapPin, Volume2, CheckCircle2, Circle } from "lucide-react";
+import { Settings, RefreshCw, ChevronLeft, Share2, Compass } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Prayer } from "adhan";
-import patternBg from "@assets/generated_images/subtle_islamic_geometric_pattern_background.png";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
+
+// Daily content data
+const dailyVerses = [
+  { text: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ", surah: "سورة الزمر: 53" },
+  { text: "وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ", surah: "سورة الطلاق: 2-3" },
+  { text: "إِنَّ مَعَ الْعُسْرِ يُسْرًا", surah: "سورة الشرح: 6" },
+  { text: "وَقُل رَّبِّ زِدْنِي عِلْمًا", surah: "سورة طه: 114" },
+  { text: "فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ", surah: "سورة البقرة: 152" }
+];
+
+const dailyHadiths = [
+  { text: "قال النَّبِيِّ صَلَّى الله عَلَيْهِ وسَلَّمَ: «لَوْ كَانَ لابْنِ آدَمَ وَادِيَانِ مِنْ مَالٍ لابْتَغَى ثَالِثًا، وَلا يَمْلأُ جَوْفَ ابْنِ آدَمَ إِلاَّ التُّرَابُ، وَيَتُوبُ اللَّهُ عَلَى مَنْ تَابَ»." },
+  { text: "قال رسول الله ﷺ: «الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ»." },
+  { text: "قال رسول الله ﷺ: «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»." },
+  { text: "قال رسول الله ﷺ: «مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَاليَوْمِ الآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ»." }
+];
+
+const dailyDuas = [
+  { text: "اللَّهُمَّ إِنَّا نَعُوذُ بِكَ مِنْ أَنْ نُشْرِكَ بِكَ شَيْئًا نَعْلَمُهُ، وَنَسْتَغْفِرُكَ لِمَا لَا نَعْلَمُهُ." },
+  { text: "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي يَفْقَهُوا قَوْلِي." },
+  { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى." },
+  { text: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ." }
+];
+
+function getDailyContent() {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  return {
+    verse: dailyVerses[dayOfYear % dailyVerses.length],
+    hadith: dailyHadiths[dayOfYear % dailyHadiths.length],
+    dua: dailyDuas[dayOfYear % dailyDuas.length]
+  };
+}
 
 export default function HomePage() {
   const { prayerTimes, nextPrayer, timeToNextPrayer, settings, refreshLocation } = usePrayer();
-  const [prayerLog, setPrayerLog] = useLocalStorage<Record<string, boolean>>("prayer-log", {});
+  const [lastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
+  const dailyContent = getDailyContent();
   
-  // Stats calculation
-  const todayKey = format(new Date(), "yyyy-MM-dd");
-  
-  const togglePrayer = (prayerId: string) => {
-    const key = `${todayKey}-${prayerId}`;
-    setPrayerLog(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const prayers = [
     { id: Prayer.Fajr, name: "الفجر", time: prayerTimes?.fajr },
-    { id: Prayer.Sunrise, name: "الشروق", time: prayerTimes?.sunrise, noTrack: true }, // Usually no fard prayer for sunrise
+    { id: Prayer.Sunrise, name: "الشروق", time: prayerTimes?.sunrise },
     { id: Prayer.Dhuhr, name: "الظهر", time: prayerTimes?.dhuhr },
     { id: Prayer.Asr, name: "العصر", time: prayerTimes?.asr },
     { id: Prayer.Maghrib, name: "المغرب", time: prayerTimes?.maghrib },
@@ -32,120 +57,198 @@ export default function HomePage() {
   ];
 
   const nextPrayerName = prayers.find(p => p.id === nextPrayer)?.name || "الفجر";
-  const todayHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
-  const todayGregorian = format(new Date(), "EEEE، d MMMM", { locale: arSA });
+  const todayHijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { 
+    weekday: 'long',
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  }).format(new Date());
 
-  // Weekly Stats
-  const calculateWeeklyProgress = () => {
-    let completed = 0;
-    let total = 0;
-    for (let i = 0; i < 7; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateKey = format(d, "yyyy-MM-dd");
-        
-        [Prayer.Fajr, Prayer.Dhuhr, Prayer.Asr, Prayer.Maghrib, Prayer.Isha].forEach(p => {
-            if (prayerLog[`${dateKey}-${p}`]) completed++;
-            total++;
-        });
+  const shareContent = async (text: string) => {
+    if (navigator.share) {
+      await navigator.share({ text });
+    } else {
+      navigator.clipboard.writeText(text);
     }
-    return total === 0 ? 0 : (completed / total) * 100;
   };
-  
-  const weeklyProgress = calculateWeeklyProgress();
 
   return (
-    <div className="min-h-screen bg-background pb-20 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-5 pointer-events-none z-0"
-        style={{ backgroundImage: `url(${patternBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-      />
-
-      {/* Header / Hero */}
-      <header className="relative z-10 p-6 pt-12 flex flex-col items-center justify-center text-center space-y-2">
-        <div className="flex items-center space-x-2 space-x-reverse bg-card/50 backdrop-blur-sm px-3 py-1 rounded-full border border-border/50 shadow-sm cursor-pointer hover:bg-card/80 transition-colors" onClick={refreshLocation}>
-            <MapPin className="h-3 w-3 text-primary" />
-            <span className="text-xs font-medium text-foreground/80">{settings.city}</span>
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 pt-6">
+        <div className="flex items-center gap-2">
+          <Link href="/settings">
+            <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 text-primary" data-testid="btn-settings">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 text-primary" onClick={refreshLocation} data-testid="btn-refresh">
+            <RefreshCw className="h-5 w-5" />
+          </Button>
         </div>
-        
-        <div className="pt-4">
-            <h2 className="text-sm font-medium text-muted-foreground">{todayGregorian}</h2>
-            <h1 className="text-lg font-bold text-primary">{todayHijri}</h1>
-        </div>
-
-        {/* Next Prayer Display */}
-        <div className="mt-8 mb-4">
-            <div className="text-sm text-muted-foreground mb-1">الصلاة القادمة</div>
-            <h1 className="text-4xl font-black text-foreground tracking-tight">{nextPrayerName}</h1>
-            <div className="text-6xl font-black text-primary font-mono mt-2 tracking-tighter tabular-nums">
-                {timeToNextPrayer || "--:--:--"}
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">متبقي للأذان</div>
-        </div>
-        
-        {/* Weekly Stats Mini-bar */}
-        <div className="w-full max-w-xs mt-4">
-             <div className="flex justify-between text-[10px] text-muted-foreground mb-1 px-1">
-                <span>التزامك الأسبوعي</span>
-                <span>{Math.round(weeklyProgress)}%</span>
-             </div>
-             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div 
-                    className="h-full bg-secondary transition-all duration-1000 ease-out" 
-                    style={{ width: `${weeklyProgress}%` }}
-                />
-             </div>
-        </div>
+        <h1 className="text-xl font-bold text-primary" data-testid="text-page-title">الرئيسية</h1>
       </header>
 
-      {/* Prayer List */}
-      <main className="relative z-10 px-4 mt-6 space-y-3 pb-8">
-        {prayers.map((prayer) => {
-            const isNext = prayer.id === nextPrayer;
-            const isDone = prayerLog[`${todayKey}-${prayer.id}`];
+      {/* Location Card */}
+      <div className="px-4 mb-4">
+        <Card className="bg-card shadow-sm">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Compass className="h-6 w-6 text-primary" />
+            </div>
+            <span className="font-medium text-foreground" data-testid="text-location">{settings.city}</span>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Next Prayer Widget */}
+      <div className="px-4 mb-4">
+        <Card className="bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground mb-1">الصلاة القادمة</p>
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-3xl font-bold text-primary font-mono tabular-nums" data-testid="text-countdown">
+                {timeToNextPrayer || "00:00:00"}
+              </span>
+              <span className="text-3xl font-bold text-foreground" data-testid="text-next-prayer">{nextPrayerName}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2" data-testid="text-hijri-date">{todayHijri}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Prayer Times Row */}
+      <div className="px-4 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {prayers.map((prayer) => {
+            const isNext = prayer.id === nextPrayer;
             return (
-                <motion.div 
-                    key={prayer.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <Card className={`border-none shadow-sm overflow-hidden transition-all duration-300 ${isNext ? 'bg-primary text-primary-foreground ring-2 ring-primary/20 ring-offset-2' : 'bg-card hover:bg-accent/50'} ${isDone && !isNext ? 'opacity-70 grayscale-[0.5]' : ''}`}>
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {/* Tracker Checkbox */}
-                                {!prayer.noTrack ? (
-                                    <button 
-                                        onClick={() => togglePrayer(prayer.id)}
-                                        className={`transition-all ${isNext ? 'text-white' : 'text-primary'}`}
-                                    >
-                                        {isDone ? <CheckCircle2 className="h-6 w-6 fill-current" /> : <Circle className="h-6 w-6" />}
-                                    </button>
-                                ) : (
-                                    <div className="w-6" /> // Spacer
-                                )}
-                                
-                                <span className={`font-bold text-lg ${isNext ? 'text-white' : 'text-foreground'} ${isDone ? 'line-through decoration-current/50' : ''}`}>
-                                    {prayer.name}
-                                </span>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <span className={`font-mono text-xl font-medium ${isNext ? 'text-white' : 'text-foreground'}`}>
-                                    {prayer.time ? format(prayer.time, "h:mm a") : "--:--"}
-                                </span>
-                                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-full ${isNext ? 'text-white/80 hover:text-white hover:bg-white/20' : 'text-muted-foreground'}`}>
-                                    <Volume2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+              <Card 
+                key={prayer.id} 
+                className={`flex-shrink-0 min-w-[70px] ${isNext ? 'bg-primary text-primary-foreground' : 'bg-card'}`}
+                data-testid={`card-prayer-${prayer.id}`}
+              >
+                <CardContent className="p-3 text-center">
+                  <p className={`text-xs mb-1 ${isNext ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{prayer.name}</p>
+                  <p className={`text-sm font-bold font-mono ${isNext ? 'text-primary-foreground' : 'text-foreground'}`}>
+                    {prayer.time ? format(prayer.time, "h:mm") : "--:--"}
+                  </p>
+                  <p className={`text-[10px] ${isNext ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                    {prayer.time ? format(prayer.time, "a") : ""}
+                  </p>
+                </CardContent>
+              </Card>
             );
-        })}
-      </main>
+          })}
+        </div>
+      </div>
+
+      {/* Continue Reading Quran */}
+      <div className="px-4 mb-6">
+        <Card className="bg-gradient-to-l from-[#5B8A51] to-[#4A7A45] text-white overflow-hidden">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm opacity-90 mb-1">متابعة المصحف من حيث توقفت</p>
+              <h3 className="text-xl font-bold mb-1">{lastRead?.name || "الفاتحة"}</h3>
+              <p className="text-sm opacity-80">الصفحة 1</p>
+              <Link href={lastRead ? `/quran/${lastRead.surah}` : "/quran/1"}>
+                <Button className="mt-3 bg-white/20 hover:bg-white/30 text-white border-0" size="sm" data-testid="btn-continue-reading">
+                  متابعة
+                </Button>
+              </Link>
+            </div>
+            <div className="text-6xl opacity-30 font-serif">القرآن</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activities */}
+      <div className="px-4 mb-6">
+        <h2 className="text-lg font-bold mb-3 text-foreground">الأنشطة الأخيرة</h2>
+        <Link href="/athkar">
+          <Card className="bg-gradient-to-l from-[#3B5998] to-[#2D4373] text-white cursor-pointer hover:opacity-95 transition-opacity">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-2xl">
+                  🌙
+                </div>
+                <span className="font-medium">أذكار المساء</span>
+              </div>
+              <ChevronLeft className="h-5 w-5 opacity-70" />
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Verse of the Day */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-foreground">آية اليوم</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-primary"
+            onClick={() => shareContent(dailyContent.verse.text)}
+            data-testid="btn-share-verse"
+          >
+            مشاركة
+          </Button>
+        </div>
+        <Card className="bg-card shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-lg leading-relaxed font-serif text-foreground mb-2 arabic-text" data-testid="text-daily-verse">
+              {dailyContent.verse.text}
+            </p>
+            <p className="text-sm text-muted-foreground text-left">{dailyContent.verse.surah}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Hadith of the Day */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-foreground">حديث اليوم</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-primary"
+            onClick={() => shareContent(dailyContent.hadith.text)}
+            data-testid="btn-share-hadith"
+          >
+            مشاركة
+          </Button>
+        </div>
+        <Card className="bg-card shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-lg leading-relaxed font-serif text-foreground arabic-text" data-testid="text-daily-hadith">
+              {dailyContent.hadith.text}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Dua of the Day */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-foreground">دعاء اليوم</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-primary"
+            onClick={() => shareContent(dailyContent.dua.text)}
+            data-testid="btn-share-dua"
+          >
+            مشاركة
+          </Button>
+        </div>
+        <Card className="bg-card shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-lg leading-relaxed font-serif text-foreground arabic-text" data-testid="text-daily-dua">
+              {dailyContent.dua.text}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

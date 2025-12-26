@@ -1,29 +1,38 @@
-import { useState, useRef, useEffect } from "react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Copy, Share2, Check, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { athkarData } from "@/lib/athkar-data";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/lib/use-local-storage";
+import { Link } from "wouter";
 
 type CategoryKey = keyof typeof athkarData;
 
-const categories: { id: CategoryKey; label: string; icon: string; desc: string }[] = [
-  { id: 'morning', label: 'أذكار الصباح', icon: '🌅', desc: 'بداية يومك بذكر الله' },
-  { id: 'evening', label: 'أذكار المساء', icon: '🌃', desc: 'حصن نفسك في المساء' },
-  { id: 'prayer', label: 'أذكار الصلاة', icon: '🤲', desc: 'التسبيح والتهليل' },
-  { id: 'sleep', label: 'أذكار النوم', icon: '🛌', desc: 'قبل النوم' },
-  { id: 'waking', label: 'أذكار الاستيقاظ', icon: '☀️', desc: 'عند الاستيقاظ' },
-  { id: 'travel', label: 'أذكار السفر', icon: '✈️', desc: 'دعاء السفر' },
+const categories: { id: CategoryKey; label: string; icon: string; color: string }[] = [
+  { id: 'morning', label: 'أذكار الصباح', icon: '☀️', color: 'bg-amber-100' },
+  { id: 'evening', label: 'أذكار المساء', icon: '🌙', color: 'bg-indigo-100' },
+  { id: 'prayer', label: 'أذكار الصلاة', icon: '🕌', color: 'bg-emerald-100' },
+  { id: 'waking', label: 'أذكار بعد الصلاة', icon: '🤲', color: 'bg-teal-100' },
+  { id: 'sleep', label: 'أذكار النوم', icon: '🛏️', color: 'bg-purple-100' },
+  { id: 'travel', label: 'أذكار الإستيقاظ', icon: '🎧', color: 'bg-blue-100' },
+];
+
+const textCategories = [
+  { label: 'فضل الذكر', link: '#' },
+  { label: 'فضل الصلاة على النبي ﷺ', link: '#' },
+  { label: 'تعظيم البيت الحرام', link: '#' },
+  { label: 'فضائل المدينة المنورة', link: '#' },
 ];
 
 export default function AthkarPage() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="min-h-screen bg-background pb-24 pt-10 px-4">
+    <div className="min-h-screen bg-background pb-24">
       <AnimatePresence mode="wait">
         {!selectedCategory ? (
           <motion.div 
@@ -31,28 +40,70 @@ export default function AthkarPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-4"
           >
-            <h1 className="text-2xl font-bold mb-6 text-primary">الأذكار</h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {categories.map((cat) => (
-                <Card 
-                  key={cat.id}
-                  className="cursor-pointer hover:bg-accent/50 transition-colors border-l-4 border-l-primary/0 hover:border-l-primary"
-                  onClick={() => setSelectedCategory(cat.id)}
-                >
-                  <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold flex items-center gap-2">
-                        <span>{cat.icon}</span> {cat.label}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mr-8">{cat.desc}</p>
-                    </div>
-                    <ArrowLeft className="h-5 w-5 text-muted-foreground/30" />
+            {/* Header */}
+            <header className="flex items-center justify-between p-4 pt-6">
+              <div className="flex items-center gap-2">
+                <Link href="/settings">
+                  <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 text-primary" data-testid="btn-athkar-settings">
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 text-primary" data-testid="btn-athkar-bookmark">
+                  <Bookmark className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full bg-primary/10 text-primary" data-testid="btn-athkar-favorite">
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </div>
+              <h1 className="text-xl font-bold text-primary" data-testid="text-athkar-title">الأذكار</h1>
+            </header>
+
+            {/* Search */}
+            <div className="px-4 mb-6">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="إبحث عن ذكر"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10 bg-card border-0 shadow-sm"
+                  data-testid="input-athkar-search"
+                />
+              </div>
+            </div>
+
+            {/* Text Categories */}
+            <div className="px-4 mb-6">
+              {textCategories.map((cat, idx) => (
+                <Card key={idx} className="mb-2 bg-card shadow-sm">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <span className="font-medium text-foreground">{cat.label}</span>
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground" />
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Icon Categories Grid */}
+            <div className="px-4">
+              <div className="grid grid-cols-2 gap-4">
+                {categories.map((cat) => (
+                  <Card 
+                    key={cat.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    data-testid={`card-athkar-${cat.id}`}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`w-12 h-12 mx-auto mb-2 rounded-xl ${cat.color} flex items-center justify-center text-2xl`}>
+                        {cat.icon}
+                      </div>
+                      <h3 className="font-medium text-foreground text-sm">{cat.label}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </motion.div>
         ) : (
@@ -71,11 +122,9 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
   const [currentIndex, setCurrentIndex] = useState(0);
   const [counter, setCounter] = useState(data[0].count);
   const { toast } = useToast();
-  const [progress, setProgress] = useLocalStorage<Record<string, number>>(`athkar-progress-${new Date().toDateString()}`, {});
 
   const currentThikr = data[currentIndex];
   
-  // Update counter when index changes
   useEffect(() => {
     setCounter(currentThikr.count);
   }, [currentIndex, currentThikr]);
@@ -83,18 +132,12 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
   const handleTap = () => {
     if (counter > 1) {
       setCounter(c => c - 1);
-      // Haptic feedback if available
       if (navigator.vibrate) navigator.vibrate(5);
     } else {
       if (currentIndex < data.length - 1) {
-        // Mark progress
-        setProgress(prev => ({ ...prev, [category]: (prev[category] || 0) + 1 }));
-        
         setCurrentIndex(c => c + 1);
         if (navigator.vibrate) navigator.vibrate(20);
       } else {
-        // Finished category
-        setProgress(prev => ({ ...prev, [category]: (prev[category] || 0) + 1 }));
         toast({ title: "أحسنت!", description: "لقد أتممت الأذكار" });
         onBack();
       }
@@ -106,59 +149,52 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
     toast({ description: "تم نسخ الذكر" });
   };
 
+  const categoryLabel = categories.find(c => c.id === category)?.label || "";
+
   return (
     <motion.div 
       key="detail"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="flex flex-col h-[85vh]"
+      className="flex flex-col min-h-screen"
     >
-      <div className="flex items-center mb-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowRight className="h-6 w-6" /> {/* RTL arrow */}
+      {/* Header */}
+      <header className="flex items-center p-4 pt-6 gap-2">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full" data-testid="btn-athkar-back">
+          <ArrowRight className="h-6 w-6" />
         </Button>
-        <h2 className="text-xl font-bold mr-2">
-          {categories.find(c => c.id === category)?.label}
-        </h2>
-        <div className="mr-auto text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-mono">
+        <h2 className="text-lg font-bold text-foreground flex-1">{categoryLabel}</h2>
+        <div className="bg-primary/10 text-primary px-3 py-1 rounded-full font-mono text-sm" data-testid="text-athkar-progress">
           {currentIndex + 1} / {data.length}
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 flex flex-col space-y-4">
-        <Card className="flex-1 bg-card/50 backdrop-blur-sm border-primary/10 shadow-sm overflow-auto">
-          <CardContent className="p-6 text-center flex flex-col justify-center h-full min-h-[300px]">
-            <p className="text-2xl md:text-3xl leading-[2] md:leading-[2.2] font-serif text-foreground/90 font-medium">
+      {/* Thikr Card */}
+      <div className="flex-1 px-4 flex flex-col">
+        <Card 
+          className="flex-1 bg-card shadow-lg cursor-pointer active:scale-[0.99] transition-transform mb-4"
+          onClick={handleTap}
+          data-testid="card-thikr"
+        >
+          <CardContent className="p-6 h-full flex flex-col justify-center items-center text-center">
+            <p className="text-xl leading-relaxed font-serif arabic-text text-foreground mb-6" data-testid="text-thikr">
               {currentThikr.text}
             </p>
-            {currentThikr.source && (
-              <p className="text-sm text-muted-foreground mt-6 font-light">
-                {currentThikr.source}
-              </p>
-            )}
+            
+            {/* Counter */}
+            <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold shadow-lg" data-testid="text-counter">
+              {counter}
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">اضغط للتسبيح</p>
           </CardContent>
         </Card>
 
-        <div className="flex justify-center gap-4 py-2">
-          <Button variant="outline" size="sm" onClick={copyText} className="gap-2">
-            <Copy className="h-4 w-4" /> نسخ
+        {/* Actions */}
+        <div className="flex justify-center gap-4 mb-6">
+          <Button variant="outline" size="icon" className="rounded-full" onClick={copyText} data-testid="btn-copy-thikr">
+            <Copy className="h-5 w-5" />
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Share2 className="h-4 w-4" /> مشاركة
-          </Button>
-        </div>
-
-        {/* Counter Area */}
-        <div className="pb-8 pt-4 flex flex-col items-center">
-            <div 
-            onClick={handleTap}
-            className="relative w-28 h-28 rounded-full bg-primary text-primary-foreground flex flex-col items-center justify-center cursor-pointer shadow-xl active:scale-95 transition-transform select-none ring-4 ring-primary/20 hover:ring-primary/40"
-            >
-                <div className="absolute inset-0 rounded-full border-4 border-white/20 border-t-white animate-spin duration-3000" style={{ animationDuration: '10s' }} />
-                <span className="text-4xl font-bold font-mono z-10">{counter}</span>
-                <span className="text-[10px] opacity-80 mt-1 z-10">اضغط</span>
-            </div>
         </div>
       </div>
     </motion.div>
