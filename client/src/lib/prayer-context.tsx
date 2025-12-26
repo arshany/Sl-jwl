@@ -14,7 +14,8 @@ interface AppSettings {
   notifications: Record<string, 'sound' | 'vibrate' | 'silent'>;
   theme: 'light' | 'dark';
   defaultAdhan: string;
-  adjustments: { fajr: number; isha: number }; // In minutes
+  adjustments: { fajr: number; isha: number };
+  use24Hour: boolean;
 }
 
 interface PrayerContextType {
@@ -47,6 +48,7 @@ const defaultSettings: AppSettings = {
   theme: 'light',
   defaultAdhan: 'makkah',
   adjustments: { fajr: 0, isha: 0 },
+  use24Hour: false,
 };
 
 const PrayerContext = createContext<PrayerContextType | undefined>(undefined);
