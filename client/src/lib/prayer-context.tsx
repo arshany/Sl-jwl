@@ -24,6 +24,8 @@ interface PrayerContextType {
   prayerTimes: PrayerTimes | null;
   nextPrayer: string;
   timeToNextPrayer: string;
+  timeToNextPrayerMs: number;
+  proximityLevel: 'far' | 'medium' | 'close' | 'imminent';
   locationError: string | null;
   loading: boolean;
   refreshLocation: () => void;
@@ -58,10 +60,13 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
   const [nextPrayer, setNextPrayer] = useState<string>('none');
   const [timeToNextPrayer, setTimeToNextPrayer] = useState('');
+  const [timeToNextPrayerMs, setTimeToNextPrayerMs] = useState(0);
+  const [proximityLevel, setProximityLevel] = useState<'far' | 'medium' | 'close' | 'imminent'>('far');
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [nearestMosque, setNearestMosque] = useState<NearestMosque | null>(getCachedMosque());
   const [mosqueLoading, setMosqueLoading] = useState(false);
+  const [hasVibrated, setHasVibrated] = useState(false);
 
   useEffect(() => {
     if (settings.city === 'Makkah' && settings.latitude === 21.4225) {
@@ -150,19 +155,39 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
 
       if (targetDate) {
         const diff = targetDate.getTime() - now.getTime();
+        setTimeToNextPrayerMs(diff);
+        
         if (diff > 0) {
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
             setTimeToNextPrayer(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            
+            const minutesLeft = diff / (1000 * 60);
+            if (minutesLeft <= 5) {
+              setProximityLevel('imminent');
+              if (!hasVibrated && 'vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+                setHasVibrated(true);
+              }
+            } else if (minutesLeft <= 15) {
+              setProximityLevel('close');
+            } else if (minutesLeft <= 30) {
+              setProximityLevel('medium');
+            } else {
+              setProximityLevel('far');
+              setHasVibrated(false);
+            }
         } else {
              setTimeToNextPrayer('00:00:00');
+             setTimeToNextPrayerMs(0);
+             setHasVibrated(false);
         }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [prayerTimes]);
+  }, [prayerTimes, hasVibrated]);
 
 
   const refreshLocation = () => {
@@ -221,6 +246,8 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
       prayerTimes,
       nextPrayer,
       timeToNextPrayer,
+      timeToNextPrayerMs,
+      proximityLevel,
       locationError,
       loading,
       refreshLocation,
