@@ -9,7 +9,7 @@ export function BottomNav() {
     { href: "/settings", icon: Clock, label: "الإعدادات" },
     { href: "/athkar", icon: AthkarIcon, label: "الأذكار" },
     { href: "/quran", icon: BookOpen, label: "المصحف" },
-    { href: "/qibla", icon: QiblaIcon, label: "البوصلة" },
+    { href: "/qibla", icon: QiblaIcon, label: "القبلة" },
     { href: "/", icon: Home, label: "الرئيسية" },
   ];
 
