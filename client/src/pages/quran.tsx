@@ -2,23 +2,13 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Bookmark, BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
-import { Link, useRoute } from "wouter";
+import { Link } from "wouter";
 import { surahMetadata, juzAmmaText } from "@/lib/quran-data";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export default function QuranPage() {
-  const [, params] = useRoute("/quran/:id");
-  
-  if (params?.id) {
-    return <QuranReader id={parseInt(params.id)} />;
-  }
-  
-  return <QuranIndex />;
-}
-
-function QuranIndex() {
+export default function QuranIndex() {
   const [search, setSearch] = useState("");
   const [lastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);
 
@@ -105,7 +95,8 @@ function QuranIndex() {
   );
 }
 
-function QuranReader({ id }: { id: number }) {
+export function QuranReader({ params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
   const surah = surahMetadata.find(s => s.number === id);
   const text = juzAmmaText[id];
   const [lastRead, setLastRead] = useLocalStorage<{surah: number, name: string} | null>("last-read", null);

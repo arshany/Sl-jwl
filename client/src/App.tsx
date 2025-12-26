@@ -6,7 +6,7 @@ import { PrayerProvider } from "@/lib/prayer-context";
 import { BottomNav } from "@/components/bottom-nav";
 import HomePage from "@/pages/home";
 import AthkarPage from "@/pages/athkar";
-import QuranPage from "@/pages/quran";
+import QuranIndex, { QuranReader } from "@/pages/quran";
 import SettingsPage from "@/pages/settings";
 import QiblaPage from "@/pages/qibla";
 import NotFound from "@/pages/not-found";
@@ -15,7 +15,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/quran/:id?" component={QuranPage} />
+      <Route path="/quran" component={QuranIndex} />
+      <Route path="/quran/:id" component={QuranReader} />
       <Route path="/athkar" component={AthkarPage} />
       <Route path="/qibla" component={QiblaPage} />
       <Route path="/settings" component={SettingsPage} />
