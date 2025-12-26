@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Bookmark, BookOpen } from "lucide-react";
+import { Search, Bookmark, BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, Route, Switch } from "wouter";
 import { surahMetadata, juzAmmaText } from "@/lib/quran-data";
 import { useLocalStorage } from "@/lib/use-local-storage";
