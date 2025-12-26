@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePrayer } from "@/lib/prayer-context";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Bell, Moon, Globe, Clock, Share2, Star, ChevronLeft, X, Volume2, Vibrate, VolumeX, Check, Music, Play } from "lucide-react";
+import { Bell, Moon, Globe, Clock, Share2, Star, ChevronLeft, X, Volume2, Vibrate, VolumeX, Check, Music, Play, Square } from "lucide-react";
 import { Link } from "wouter";
+import { adhanSounds, playAdhanPreview, stopAdhanPreview } from "@/lib/adhan-sounds";
 
 type NotificationMode = 'sound' | 'vibrate' | 'silent';
 
@@ -17,25 +18,41 @@ const prayerNames: Record<string, string> = {
   isha: 'العشاء'
 };
 
-const adhanSounds = [
-  { id: 'makkah', name: 'أذان الحرم المكي', reciter: 'علي ملا', location: 'مكة المكرمة' },
-  { id: 'madinah', name: 'أذان المسجد النبوي', reciter: 'عبدالمجيد السريحي', location: 'المدينة المنورة' },
-  { id: 'alaqsa', name: 'أذان المسجد الأقصى', reciter: 'محمد رشاد الشريف', location: 'القدس' },
-  { id: 'egypt', name: 'أذان مصر', reciter: 'محمد رفعت', location: 'مصر' },
-  { id: 'mishary', name: 'أذان مشاري العفاسي', reciter: 'مشاري راشد العفاسي', location: 'الكويت' },
-  { id: 'sudais', name: 'أذان السديس', reciter: 'عبدالرحمن السديس', location: 'مكة المكرمة' },
-  { id: 'dubai', name: 'أذان دبي', reciter: 'أحمد النعينعي', location: 'الإمارات' },
-  { id: 'turkey', name: 'أذان تركيا', reciter: 'الأذان التركي', location: 'تركيا' },
-];
-
 export default function SettingsPage() {
   const { settings, updateSettings } = usePrayer();
   const [adhanDialogOpen, setAdhanDialogOpen] = useState(false);
   const [adhanSoundDialogOpen, setAdhanSoundDialogOpen] = useState(false);
   const [athkarDialogOpen, setAthkarDialogOpen] = useState(false);
   const [counterDialogOpen, setCounterDialogOpen] = useState(false);
+  const [playingSound, setPlayingSound] = useState<string | null>(null);
 
   const currentAdhanSound = adhanSounds.find(s => s.id === settings.defaultAdhan) || adhanSounds[0];
+
+  useEffect(() => {
+    if (!adhanSoundDialogOpen) {
+      stopAdhanPreview();
+      setPlayingSound(null);
+    }
+  }, [adhanSoundDialogOpen]);
+
+  const handlePlaySound = (soundId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (playingSound === soundId) {
+      stopAdhanPreview();
+      setPlayingSound(null);
+    } else {
+      playAdhanPreview(soundId);
+      setPlayingSound(soundId);
+    }
+  };
+
+  const handleSelectSound = (soundId: string) => {
+    stopAdhanPreview();
+    setPlayingSound(null);
+    updateSettings({ defaultAdhan: soundId });
+    setAdhanSoundDialogOpen(false);
+    setAdhanDialogOpen(true);
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -235,38 +252,58 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle className="text-center">اختر صوت الأذان</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 mt-4">
+          <p className="text-sm text-muted-foreground text-center mb-2">اضغط على زر التشغيل للاستماع</p>
+          <div className="space-y-2 mt-2">
             {adhanSounds.map((sound) => (
-              <button
+              <div
                 key={sound.id}
-                onClick={() => {
-                  updateSettings({ defaultAdhan: sound.id });
-                  setAdhanSoundDialogOpen(false);
-                  setAdhanDialogOpen(true);
-                }}
                 className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
                   settings.defaultAdhan === sound.id
                     ? 'bg-primary/10 border-primary'
-                    : 'bg-muted border-border hover:bg-muted/80'
+                    : 'bg-muted border-border'
                 }`}
                 data-testid={`adhan-sound-${sound.id}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    settings.defaultAdhan === sound.id ? 'bg-primary text-primary-foreground' : 'bg-background'
-                  }`}>
-                    {settings.defaultAdhan === sound.id ? (
-                      <Check className="h-5 w-5" />
+                <div className="flex items-center gap-3 flex-1">
+                  <button
+                    onClick={(e) => handlePlaySound(sound.id, e)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                      playingSound === sound.id 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    }`}
+                    data-testid={`btn-play-${sound.id}`}
+                  >
+                    {playingSound === sound.id ? (
+                      <Square className="h-4 w-4" />
                     ) : (
-                      <Play className="h-4 w-4 text-primary" />
+                      <Play className="h-4 w-4 mr-[-2px]" />
                     )}
-                  </div>
-                  <div className="text-right">
+                  </button>
+                  <div className="text-right flex-1">
                     <p className="font-medium text-foreground">{sound.name}</p>
                     <p className="text-xs text-muted-foreground">{sound.reciter} - {sound.location}</p>
                   </div>
                 </div>
-              </button>
+                <button
+                  onClick={() => handleSelectSound(sound.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    settings.defaultAdhan === sound.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background border border-border hover:bg-muted'
+                  }`}
+                  data-testid={`btn-select-${sound.id}`}
+                >
+                  {settings.defaultAdhan === sound.id ? (
+                    <span className="flex items-center gap-1">
+                      <Check className="h-4 w-4" />
+                      مختار
+                    </span>
+                  ) : (
+                    'اختيار'
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         </DialogContent>
