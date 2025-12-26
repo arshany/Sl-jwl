@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Coordinates, CalculationMethod, PrayerTimes, Prayer, Madhab } from 'adhan';
 import { useLocalStorage } from './use-local-storage';
+import { findNearestMosque, NearestMosque, getCachedMosque } from './mosque-finder';
 
 type CalculationMethodName = 'MuslimWorldLeague' | 'Egyptian' | 'Karachi' | 'UmmAlQura' | 'Dubai' | 'MoonsightingCommittee' | 'NorthAmerica' | 'Kuwait' | 'Qatar' | 'Singapore' | 'Tehran' | 'Turkey';
 
@@ -25,6 +26,9 @@ interface PrayerContextType {
   locationError: string | null;
   loading: boolean;
   refreshLocation: () => void;
+  nearestMosque: NearestMosque | null;
+  mosqueLoading: boolean;
+  refreshMosque: () => void;
 }
 
 const defaultSettings: AppSettings = {
@@ -54,6 +58,8 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
   const [timeToNextPrayer, setTimeToNextPrayer] = useState('');
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [nearestMosque, setNearestMosque] = useState<NearestMosque | null>(getCachedMosque());
+  const [mosqueLoading, setMosqueLoading] = useState(false);
 
   useEffect(() => {
     if (settings.city === 'Makkah' && settings.latitude === 21.4225) {
@@ -187,6 +193,25 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
+  const refreshMosque = async () => {
+    if (!settings.latitude || !settings.longitude) return;
+    setMosqueLoading(true);
+    try {
+      const mosque = await findNearestMosque(settings.latitude, settings.longitude);
+      setNearestMosque(mosque);
+    } catch (e) {
+      console.error('Error fetching nearest mosque:', e);
+    } finally {
+      setMosqueLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (settings.latitude && settings.longitude && settings.city !== 'Makkah') {
+      refreshMosque();
+    }
+  }, [settings.latitude, settings.longitude]);
+
   return (
     <PrayerContext.Provider value={{
       settings,
@@ -196,7 +221,10 @@ export function PrayerProvider({ children }: { children: React.ReactNode }) {
       timeToNextPrayer,
       locationError,
       loading,
-      refreshLocation
+      refreshLocation,
+      nearestMosque,
+      mosqueLoading,
+      refreshMosque
     }}>
       {children}
     </PrayerContext.Provider>
