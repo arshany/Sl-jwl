@@ -82,7 +82,7 @@ export default function SettingsPage() {
 
       {/* App Info Section */}
       <div className="px-4 mb-6">
-        <h2 className="text-primary font-bold mb-3 text-center">آمين</h2>
+        <h2 className="text-primary font-bold mb-3 text-center">صلاة تايم</h2>
         <Card className="bg-card shadow-sm">
           <CardContent className="p-0 divide-y divide-border">
             <SettingRow 
@@ -105,7 +105,7 @@ export default function SettingsPage() {
             />
             <SettingRow 
               icon={<Star className="h-5 w-5 text-primary" />}
-              label="قيّم آمين"
+              label="قيّم صلاة تايم"
               hasChevron
               data-testid="setting-rate"
             />
