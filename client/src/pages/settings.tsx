@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Bell, Moon, Globe, Clock, Share2, Star, ChevronLeft, X, Volume2, Vibrate, VolumeX, Check } from "lucide-react";
+import { Bell, Moon, Globe, Clock, Share2, Star, ChevronLeft, X, Volume2, Vibrate, VolumeX, Check, Music, Play } from "lucide-react";
 import { Link } from "wouter";
 
 type NotificationMode = 'sound' | 'vibrate' | 'silent';
@@ -17,11 +17,25 @@ const prayerNames: Record<string, string> = {
   isha: 'العشاء'
 };
 
+const adhanSounds = [
+  { id: 'makkah', name: 'أذان الحرم المكي', reciter: 'علي ملا', location: 'مكة المكرمة' },
+  { id: 'madinah', name: 'أذان المسجد النبوي', reciter: 'عبدالمجيد السريحي', location: 'المدينة المنورة' },
+  { id: 'alaqsa', name: 'أذان المسجد الأقصى', reciter: 'محمد رشاد الشريف', location: 'القدس' },
+  { id: 'egypt', name: 'أذان مصر', reciter: 'محمد رفعت', location: 'مصر' },
+  { id: 'mishary', name: 'أذان مشاري العفاسي', reciter: 'مشاري راشد العفاسي', location: 'الكويت' },
+  { id: 'sudais', name: 'أذان السديس', reciter: 'عبدالرحمن السديس', location: 'مكة المكرمة' },
+  { id: 'dubai', name: 'أذان دبي', reciter: 'أحمد النعينعي', location: 'الإمارات' },
+  { id: 'turkey', name: 'أذان تركيا', reciter: 'الأذان التركي', location: 'تركيا' },
+];
+
 export default function SettingsPage() {
   const { settings, updateSettings } = usePrayer();
   const [adhanDialogOpen, setAdhanDialogOpen] = useState(false);
+  const [adhanSoundDialogOpen, setAdhanSoundDialogOpen] = useState(false);
   const [athkarDialogOpen, setAthkarDialogOpen] = useState(false);
   const [counterDialogOpen, setCounterDialogOpen] = useState(false);
+
+  const currentAdhanSound = adhanSounds.find(s => s.id === settings.defaultAdhan) || adhanSounds[0];
 
   const handleShare = async () => {
     const shareData = {
@@ -156,35 +170,103 @@ export default function SettingsPage() {
 
       {/* Adhan Settings Dialog */}
       <Dialog open={adhanDialogOpen} onOpenChange={setAdhanDialogOpen}>
-        <DialogContent className="max-w-sm" dir="rtl">
+        <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-center">إعدادات الآذان</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            {Object.entries(prayerNames).map(([key, name]) => (
-              <div key={key} className="space-y-2">
-                <p className="font-medium text-foreground">{name}</p>
-                <div className="flex gap-2">
-                  <NotificationButton
-                    active={settings.notifications[key] === 'sound'}
-                    onClick={() => updateNotification(key, 'sound')}
-                    icon={<Volume2 className="h-4 w-4" />}
-                    label="صوت"
-                  />
-                  <NotificationButton
-                    active={settings.notifications[key] === 'vibrate'}
-                    onClick={() => updateNotification(key, 'vibrate')}
-                    icon={<Vibrate className="h-4 w-4" />}
-                    label="اهتزاز"
-                  />
-                  <NotificationButton
-                    active={settings.notifications[key] === 'silent'}
-                    onClick={() => updateNotification(key, 'silent')}
-                    icon={<VolumeX className="h-4 w-4" />}
-                    label="صامت"
-                  />
+            {/* Adhan Sound Selection */}
+            <div className="space-y-2">
+              <p className="font-medium text-foreground">صوت الأذان</p>
+              <button
+                onClick={() => {
+                  setAdhanDialogOpen(false);
+                  setAdhanSoundDialogOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                data-testid="btn-select-adhan-sound"
+              >
+                <div className="flex items-center gap-3">
+                  <Music className="h-5 w-5 text-primary" />
+                  <div className="text-right">
+                    <p className="font-medium text-foreground">{currentAdhanSound.name}</p>
+                    <p className="text-xs text-muted-foreground">{currentAdhanSound.reciter}</p>
+                  </div>
                 </div>
-              </div>
+                <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <p className="font-medium text-foreground mb-3">نوع التنبيه لكل صلاة</p>
+              {Object.entries(prayerNames).map(([key, name]) => (
+                <div key={key} className="space-y-2 mb-4">
+                  <p className="text-sm text-muted-foreground">{name}</p>
+                  <div className="flex gap-2">
+                    <NotificationButton
+                      active={settings.notifications[key] === 'sound'}
+                      onClick={() => updateNotification(key, 'sound')}
+                      icon={<Volume2 className="h-4 w-4" />}
+                      label="صوت"
+                    />
+                    <NotificationButton
+                      active={settings.notifications[key] === 'vibrate'}
+                      onClick={() => updateNotification(key, 'vibrate')}
+                      icon={<Vibrate className="h-4 w-4" />}
+                      label="اهتزاز"
+                    />
+                    <NotificationButton
+                      active={settings.notifications[key] === 'silent'}
+                      onClick={() => updateNotification(key, 'silent')}
+                      icon={<VolumeX className="h-4 w-4" />}
+                      label="صامت"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adhan Sound Selection Dialog */}
+      <Dialog open={adhanSoundDialogOpen} onOpenChange={setAdhanSoundDialogOpen}>
+        <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center">اختر صوت الأذان</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 mt-4">
+            {adhanSounds.map((sound) => (
+              <button
+                key={sound.id}
+                onClick={() => {
+                  updateSettings({ defaultAdhan: sound.id });
+                  setAdhanSoundDialogOpen(false);
+                  setAdhanDialogOpen(true);
+                }}
+                className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                  settings.defaultAdhan === sound.id
+                    ? 'bg-primary/10 border-primary'
+                    : 'bg-muted border-border hover:bg-muted/80'
+                }`}
+                data-testid={`adhan-sound-${sound.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    settings.defaultAdhan === sound.id ? 'bg-primary text-primary-foreground' : 'bg-background'
+                  }`}>
+                    {settings.defaultAdhan === sound.id ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      <Play className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-foreground">{sound.name}</p>
+                    <p className="text-xs text-muted-foreground">{sound.reciter} - {sound.location}</p>
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
         </DialogContent>
