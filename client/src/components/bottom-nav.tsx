@@ -6,10 +6,10 @@ export function BottomNav() {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/settings", icon: Clock, label: "المواقيت" },
+    { href: "/settings", icon: Clock, label: "الإعدادات" },
     { href: "/athkar", icon: AthkarIcon, label: "الأذكار" },
     { href: "/quran", icon: BookOpen, label: "المصحف" },
-    { href: "/qibla", icon: QiblaIcon, label: "المِشغَل" },
+    { href: "/qibla", icon: QiblaIcon, label: "البوصلة" },
     { href: "/", icon: Home, label: "الرئيسية" },
   ];
 
