@@ -12,7 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { getDirectionsUrl } from "@/lib/mosque-finder";
 import { toPng } from "html-to-image";
-import { divineMessages } from "@/lib/spiritual-data";
+import { divineMessages, duaByMood } from "@/lib/spiritual-data";
 
 const dailyVerses = [
   { text: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ", surah: "الزمر: 53", tafsir: "يخاطب الله عباده الذين أكثروا من الذنوب ألا يفقدوا الأمل في رحمته، فهو يغفر جميع الذنوب لمن تاب." },
@@ -76,6 +76,7 @@ export default function HomePage() {
   const [dhikrStreak, setDhikrStreak] = useLocalStorage<{count: number, lastDate: string}>('dhikr-streak', {count: 0, lastDate: ''});
   const [currentMood, setCurrentMood] = useLocalStorage<MoodType>('current-mood', 'peaceful');
   const [hasanat, setHasanat] = useLocalStorage<{date: string, prayed: boolean, read: boolean, remembered: boolean}>('daily-hasanat', {date: '', prayed: false, read: false, remembered: false});
+  const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
   const [showTafsir, setShowTafsir] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const verseImageRef = useRef<HTMLDivElement>(null);
@@ -447,6 +448,52 @@ export default function HomePage() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* How Are You Feeling Today? */}
+      <div className="px-4 mb-6">
+        <Card className="bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4">
+            <h3 className="font-bold text-foreground text-center mb-4">كيف تشعر اليوم؟</h3>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {Object.entries(duaByMood).map(([key, mood]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedFeeling(selectedFeeling === key ? null : key)}
+                  className={`p-3 rounded-xl transition-all text-center ${
+                    selectedFeeling === key 
+                      ? 'bg-primary text-primary-foreground scale-105' 
+                      : `${mood.color} dark:bg-opacity-20`
+                  }`}
+                  data-testid={`btn-feeling-${key}`}
+                >
+                  <span className="text-2xl block mb-1">{mood.icon}</span>
+                  <span className="text-xs font-medium">{mood.title}</span>
+                </button>
+              ))}
+            </div>
+            
+            <AnimatePresence>
+              {selectedFeeling && duaByMood[selectedFeeling as keyof typeof duaByMood] && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-gradient-to-l from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 text-center">
+                    <p className="text-lg font-serif text-foreground leading-relaxed mb-2" data-testid="text-suggested-dua">
+                      {duaByMood[selectedFeeling as keyof typeof duaByMood].duas[0].text}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      📖 {duaByMood[selectedFeeling as keyof typeof duaByMood].duas[0].source}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
       </div>
