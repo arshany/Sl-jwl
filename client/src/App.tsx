@@ -9,6 +9,8 @@ import AthkarPage from "@/pages/athkar";
 import QuranIndex, { QuranReader } from "@/pages/quran";
 import SettingsPage from "@/pages/settings";
 import QiblaPage from "@/pages/qibla";
+import TasbihPage from "@/pages/tasbih";
+import DuaMoodPage from "@/pages/dua-mood";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +21,8 @@ function Router() {
       <Route path="/quran/:id" component={QuranReader} />
       <Route path="/athkar" component={AthkarPage} />
       <Route path="/qibla" component={QiblaPage} />
+      <Route path="/tasbih" component={TasbihPage} />
+      <Route path="/dua-mood" component={DuaMoodPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>

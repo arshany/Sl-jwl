@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, Copy } from "lucide-react";
+import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, Copy, Hand } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { athkarData } from "@/lib/athkar-data";
+import { contextualAthkar } from "@/lib/spiritual-data";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { Link } from "wouter";
@@ -17,15 +18,15 @@ const categories: { id: CategoryKey; label: string; icon: string; color: string 
   { id: 'prayer', label: 'أذكار الصلاة', icon: '🕌', color: 'bg-emerald-100' },
   { id: 'waking', label: 'أذكار بعد الصلاة', icon: '🤲', color: 'bg-teal-100' },
   { id: 'sleep', label: 'أذكار النوم', icon: '🛏️', color: 'bg-purple-100' },
-  { id: 'travel', label: 'أذكار الإستيقاظ', icon: '🎧', color: 'bg-blue-100' },
+  { id: 'travel', label: 'أذكار السفر', icon: '✈️', color: 'bg-blue-100' },
 ];
 
-const textCategories = [
-  { label: 'فضل الذكر', link: '#' },
-  { label: 'فضل الصلاة على النبي ﷺ', link: '#' },
-  { label: 'تعظيم البيت الحرام', link: '#' },
-  { label: 'فضائل المدينة المنورة', link: '#' },
-];
+const contextCategories = Object.entries(contextualAthkar).map(([key, value]) => ({
+  id: key,
+  label: value.title,
+  icon: value.icon,
+  description: value.description,
+}));
 
 export default function AthkarPage() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
@@ -73,21 +74,46 @@ export default function AthkarPage() {
               </div>
             </div>
 
-            {/* Text Categories */}
+            {/* Smart Tasbih Counter */}
             <div className="px-4 mb-6">
-              {textCategories.map((cat, idx) => (
-                <Card key={idx} className="mb-2 bg-card shadow-sm">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <span className="font-medium text-foreground">{cat.label}</span>
-                    <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+              <Link href="/tasbih">
+                <Card className="bg-gradient-to-l from-primary to-primary/90 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                      📿
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg">عداد التسبيح الذكي</h3>
+                      <p className="text-sm opacity-80">باللمس أو هز الجوال</p>
+                    </div>
+                    <ChevronLeft className="h-6 w-6 opacity-70" />
                   </CardContent>
                 </Card>
-              ))}
+              </Link>
+            </div>
+
+            {/* Dua by Mood */}
+            <div className="px-4 mb-6">
+              <Link href="/dua-mood">
+                <Card className="bg-gradient-to-l from-purple-600 to-purple-700 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                      🤲
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg">دعاء حسب حالتك</h3>
+                      <p className="text-sm opacity-80">قلق • حزن • فرح • قرار مهم</p>
+                    </div>
+                    <ChevronLeft className="h-6 w-6 opacity-70" />
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
 
             {/* Icon Categories Grid */}
-            <div className="px-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="px-4 mb-6">
+              <h2 className="font-bold text-foreground mb-3">أذكار اليوم</h2>
+              <div className="grid grid-cols-3 gap-3">
                 {categories.map((cat) => (
                   <Card 
                     key={cat.id}
@@ -95,11 +121,31 @@ export default function AthkarPage() {
                     onClick={() => setSelectedCategory(cat.id)}
                     data-testid={`card-athkar-${cat.id}`}
                   >
-                    <CardContent className="p-4 text-center">
-                      <div className={`w-12 h-12 mx-auto mb-2 rounded-xl ${cat.color} flex items-center justify-center text-2xl`}>
+                    <CardContent className="p-3 text-center">
+                      <div className={`w-10 h-10 mx-auto mb-2 rounded-lg ${cat.color} flex items-center justify-center text-xl`}>
                         {cat.icon}
                       </div>
+                      <h3 className="font-medium text-foreground text-xs">{cat.label}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Contextual Athkar */}
+            <div className="px-4">
+              <h2 className="font-bold text-foreground mb-3">أذكار حسب الوقت والمكان</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {contextCategories.map((cat) => (
+                  <Card 
+                    key={cat.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                    data-testid={`card-context-${cat.id}`}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <span className="text-2xl block mb-1">{cat.icon}</span>
                       <h3 className="font-medium text-foreground text-sm">{cat.label}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">{cat.description}</p>
                     </CardContent>
                   </Card>
                 ))}

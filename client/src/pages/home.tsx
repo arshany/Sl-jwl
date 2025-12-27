@@ -2,7 +2,7 @@ import { usePrayer } from "@/lib/prayer-context";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, RefreshCw, ChevronLeft, Share2, Compass, MapPin, Navigation, Loader2, Check, Sun, Moon, HandHeart, BookOpen, Info, Download } from "lucide-react";
+import { Settings, RefreshCw, ChevronLeft, Share2, Compass, MapPin, Navigation, Loader2, Check, Sun, Moon, HandHeart, BookOpen, Info, Download, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { getDirectionsUrl } from "@/lib/mosque-finder";
 import { toPng } from "html-to-image";
+import { divineMessages } from "@/lib/spiritual-data";
 
 const dailyVerses = [
   { text: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ", surah: "الزمر: 53", tafsir: "يخاطب الله عباده الذين أكثروا من الذنوب ألا يفقدوا الأمل في رحمته، فهو يغفر جميع الذنوب لمن تاب." },
@@ -74,6 +75,7 @@ export default function HomePage() {
   const [dhikrCompleted, setDhikrCompleted] = useLocalStorage<{date: string, completed: boolean}>('daily-dhikr-completed', {date: '', completed: false});
   const [dhikrStreak, setDhikrStreak] = useLocalStorage<{count: number, lastDate: string}>('dhikr-streak', {count: 0, lastDate: ''});
   const [currentMood, setCurrentMood] = useLocalStorage<MoodType>('current-mood', 'peaceful');
+  const [hasanat, setHasanat] = useLocalStorage<{date: string, prayed: boolean, read: boolean, remembered: boolean}>('daily-hasanat', {date: '', prayed: false, read: false, remembered: false});
   const [showTafsir, setShowTafsir] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const verseImageRef = useRef<HTMLDivElement>(null);
@@ -83,6 +85,15 @@ export default function HomePage() {
   
   const dailyVerse = dailyVerses[dayOfYear % dailyVerses.length];
   const dailyDhikr = dailyAdhkar[dayOfYear % dailyAdhkar.length];
+  const dailyMessage = divineMessages[dayOfYear % divineMessages.length];
+  
+  const todayHasanat = hasanat.date === todayDate ? hasanat : {date: todayDate, prayed: false, read: false, remembered: false};
+  
+  const toggleHasanat = (type: 'prayed' | 'read' | 'remembered') => {
+    const updated = { ...todayHasanat, date: todayDate, [type]: !todayHasanat[type] };
+    setHasanat(updated);
+    if ('vibrate' in navigator) navigator.vibrate(50);
+  };
   
   const isDhikrCompletedToday = dhikrCompleted.date === todayDate && dhikrCompleted.completed;
 
@@ -436,6 +447,83 @@ export default function HomePage() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Divine Message */}
+      <div className="px-4 mb-6">
+        <Card className="bg-gradient-to-l from-indigo-600 to-indigo-700 text-white shadow-lg overflow-hidden">
+          <CardContent className="p-4 text-center">
+            <span className="text-3xl block mb-3">💫</span>
+            <p className="text-lg font-serif leading-relaxed mb-2" data-testid="text-divine-message">
+              {dailyMessage.text}
+            </p>
+            <p className="text-sm opacity-70">📖 {dailyMessage.source}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Hasanat Map */}
+      <div className="px-4 mb-6">
+        <Card className="bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4">
+            <h3 className="font-bold text-foreground text-center mb-4">خريطة حسناتي اليوم</h3>
+            <div className="flex justify-center gap-6">
+              <button
+                onClick={() => toggleHasanat('prayed')}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                  todayHasanat.prayed ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                }`}
+                data-testid="btn-hasanat-prayed"
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                  todayHasanat.prayed ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                }`}>
+                  {todayHasanat.prayed ? '✓' : '🕌'}
+                </div>
+                <span className={`text-xs font-medium ${todayHasanat.prayed ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                  صليت
+                </span>
+              </button>
+              
+              <button
+                onClick={() => toggleHasanat('read')}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                  todayHasanat.read ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                }`}
+                data-testid="btn-hasanat-read"
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                  todayHasanat.read ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                }`}>
+                  {todayHasanat.read ? '✓' : '📖'}
+                </div>
+                <span className={`text-xs font-medium ${todayHasanat.read ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                  قرأت
+                </span>
+              </button>
+              
+              <button
+                onClick={() => toggleHasanat('remembered')}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                  todayHasanat.remembered ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                }`}
+                data-testid="btn-hasanat-remembered"
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                  todayHasanat.remembered ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                }`}>
+                  {todayHasanat.remembered ? '✓' : '📿'}
+                </div>
+                <span className={`text-xs font-medium ${todayHasanat.remembered ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                  ذكرت
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              اضغط للتحفيز البصري • بدون أرقام
+            </p>
           </CardContent>
         </Card>
       </div>
