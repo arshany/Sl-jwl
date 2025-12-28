@@ -11,6 +11,8 @@ import SettingsPage from "@/pages/settings";
 import QiblaPage from "@/pages/qibla";
 import TasbihPage from "@/pages/tasbih";
 import DuaMoodPage from "@/pages/dua-mood";
+import PrivacyPage from "@/pages/privacy";
+import AboutPage from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +26,8 @@ function Router() {
       <Route path="/tasbih" component={TasbihPage} />
       <Route path="/dua-mood" component={DuaMoodPage} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/about" component={AboutPage} />
       <Route component={NotFound} />
     </Switch>
   );

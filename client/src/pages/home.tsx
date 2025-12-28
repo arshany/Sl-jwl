@@ -170,7 +170,7 @@ export default function HomePage() {
           text: `${dailyVerse.text}\n\n📖 ${dailyVerse.surah}`,
         });
       } else if (navigator.share) {
-        const text = `${dailyVerse.text}\n\n📖 ${dailyVerse.surah}\n\n🌙 من تطبيق صلاة تايم`;
+        const text = `${dailyVerse.text}\n\n📖 ${dailyVerse.surah}\n\n🌙 من تطبيق أقم`;
         await navigator.share({ text });
       } else {
         const link = document.createElement('a');
@@ -179,7 +179,7 @@ export default function HomePage() {
         link.click();
       }
     } catch (e) {
-      const text = `${dailyVerse.text}\n\n📖 ${dailyVerse.surah}\n\n🌙 من تطبيق صلاة تايم`;
+      const text = `${dailyVerse.text}\n\n📖 ${dailyVerse.surah}\n\n🌙 من تطبيق أقم`;
       navigator.clipboard.writeText(text);
     } finally {
       setIsGeneratingImage(false);
@@ -612,7 +612,7 @@ export default function HomePage() {
         </p>
         <p className="text-lg text-white/80 mb-4">📖 {dailyVerse.surah}</p>
         <div className="border-t border-white/20 pt-4 mt-6">
-          <p className="text-sm text-white/60">صلاة تايم</p>
+          <p className="text-sm text-white/60">أقم</p>
         </div>
       </div>
 

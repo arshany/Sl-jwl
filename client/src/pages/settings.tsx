@@ -56,8 +56,8 @@ export default function SettingsPage() {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'صلاة تايم',
-      text: 'تطبيق إسلامي شامل لمواقيت الصلاة، القبلة، القرآن والأذكار',
+      title: 'أقم - الصلاة في وقتها',
+      text: 'تطبيق إسلامي أنيق لمواقيت الصلاة، القبلة، القرآن والأذكار - رفيقك اليومي في العبادة',
       url: window.location.origin
     };
     
@@ -176,11 +176,27 @@ export default function SettingsPage() {
             />
             <SettingRow 
               icon={<Star className="h-5 w-5 text-primary" />}
-              label="قيّم صلاة تايم"
+              label="قيّم أقم"
               hasChevron
               onClick={() => alert('شكراً لدعمك!')}
               data-testid="setting-rate"
             />
+            <Link href="/about">
+              <SettingRow 
+                icon={<Globe className="h-5 w-5 text-primary" />}
+                label="حول التطبيق"
+                hasChevron
+                data-testid="setting-about"
+              />
+            </Link>
+            <Link href="/privacy">
+              <SettingRow 
+                icon={<Globe className="h-5 w-5 text-primary" />}
+                label="سياسة الخصوصية"
+                hasChevron
+                data-testid="setting-privacy"
+              />
+            </Link>
           </CardContent>
         </Card>
       </div>

@@ -1,8 +1,11 @@
-# Salah Time - Islamic Prayer App
+# أقم - Aqim Islamic Prayer App
 
 ## Overview
 
-Salah Time (صلاة تايم) is a comprehensive Islamic mobile-first web application built with React and Express. The app provides prayer times calculation, Qibla direction compass, Quran reading, and Islamic remembrances (Athkar). It's designed primarily for Arabic-speaking users with full RTL (right-to-left) support.
+أقم (Aqim) is a comprehensive Islamic mobile-first web application built with React and Express. The app provides prayer times calculation, Qibla direction compass, Quran reading, and Islamic remembrances (Athkar). It's designed primarily for Arabic-speaking users with full RTL (right-to-left) support. Developed by Meta Vision (www.meta-vision.net).
+
+## App Description
+"أقم – الصلاة في وقتها" - An elegant Islamic app to help you maintain prayer and remembrance in a calm and simple way, without disturbance or complexity.
 
 ## User Preferences
 

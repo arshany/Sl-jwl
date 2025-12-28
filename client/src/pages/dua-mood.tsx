@@ -25,7 +25,7 @@ export default function DuaMoodPage() {
   };
 
   const shareDua = async (text: string, source: string) => {
-    const fullText = `${text}\n\n📖 ${source}\n\n🤲 من تطبيق صلاة تايم`;
+    const fullText = `${text}\n\n📖 ${source}\n\n🤲 من تطبيق أقم`;
     if (navigator.share) {
       try {
         await navigator.share({ text: fullText });
