@@ -138,10 +138,10 @@ export default function HomePage() {
   const getProximityColor = () => {
     switch (proximityLevel) {
       case 'imminent': return 'from-red-500 to-red-600';
-      case 'close': return 'from-orange-500 to-orange-600';
-      case 'medium': return 'from-yellow-500 to-yellow-600';
-      case 'far': return 'from-emerald-500 to-emerald-600';
-      default: return 'from-emerald-500 to-emerald-600';
+      case 'close': return 'from-[#f4b360] to-[#e09840]';
+      case 'medium': return 'from-[#bbac92] to-[#a69778]';
+      case 'far': return 'from-[#709046] to-[#5a7338]';
+      default: return 'from-[#709046] to-[#5a7338]';
     }
   };
 
@@ -312,7 +312,7 @@ export default function HomePage() {
 
       {/* Daily Dhikr Widget */}
       <div className="px-4 mb-6">
-        <Card className="bg-gradient-to-l from-emerald-600 to-emerald-700 text-white shadow-lg overflow-hidden">
+        <Card className="bg-gradient-to-l from-[#709046] to-[#5a7338] text-white shadow-lg overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold">ذكر اليوم</h3>
