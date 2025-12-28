@@ -4,33 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, Copy, Hand } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { athkarData } from "@/lib/athkar-data";
-import { contextualAthkar } from "@/lib/spiritual-data";
+import { athkarCategories, type AthkarCategory, type Dhikr } from "@/lib/athkar-data";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { Link } from "wouter";
 
-type CategoryKey = keyof typeof athkarData;
+const mainCategories = ['morning', 'evening', 'after_prayer', 'waking', 'sleep', 'travel'];
 
-const categories: { id: CategoryKey; label: string; icon: string; color: string }[] = [
-  { id: 'morning', label: 'أذكار الصباح', icon: '☀️', color: 'bg-[#f4b360]/30' },
-  { id: 'evening', label: 'أذكار المساء', icon: '🌙', color: 'bg-[#bedbe8]/50' },
-  { id: 'prayer', label: 'أذكار الصلاة', icon: '🕌', color: 'bg-[#709046]/20' },
-  { id: 'waking', label: 'أذكار بعد الصلاة', icon: '🤲', color: 'bg-[#bbac92]/30' },
-  { id: 'sleep', label: 'أذكار النوم', icon: '🛏️', color: 'bg-[#bedbe8]/40' },
-  { id: 'travel', label: 'أذكار السفر', icon: '✈️', color: 'bg-[#f4b360]/20' },
-];
+const dailyCategories = athkarCategories.filter(c => mainCategories.includes(c.id));
 
-const contextCategories = Object.entries(contextualAthkar).map(([key, value]) => ({
-  id: key,
-  label: value.title,
-  icon: value.icon,
-  description: value.description,
-}));
+const prayerCategories = athkarCategories.filter(c => 
+  ['before_wudu', 'after_wudu', 'going_mosque', 'entering_mosque', 'leaving_mosque', 'adhan', 'istiftah', 'rukoo', 'rising_rukoo', 'sujood', 'between_sujood', 'tashahhud', 'salah_on_prophet', 'before_salam', 'after_prayer', 'qunut'].includes(c.id)
+);
+
+const lifeCategories = athkarCategories.filter(c => 
+  ['leaving_home', 'entering_home', 'bathroom_enter', 'bathroom_exit', 'clothing', 'new_clothing', 'before_food', 'after_food', 'guest', 'sneezing', 'marriage', 'intimacy', 'baby', 'children', 'riding', 'travel', 'return_travel', 'entering_town', 'market'].includes(c.id)
+);
+
+const emotionalCategories = athkarCategories.filter(c => 
+  ['worry', 'distress', 'anger', 'fear', 'doubt', 'waswas', 'difficulty', 'sin', 'debt', 'enemy', 'oppressor', 'afflicted', 'calamity'].includes(c.id)
+);
+
+const specialCategories = athkarCategories.filter(c => 
+  ['istikhara', 'sick_visit', 'dying', 'dead_prayer', 'burial', 'after_burial', 'condolence', 'grave_visit', 'wind', 'thunder', 'rain', 'after_rain', 'new_moon', 'iftar', 'hajj', 'arafah', 'pain', 'evil_eye', 'slaughter', 'devils', 'dajjal', 'love', 'shirk', 'thanks', 'gathering', 'istighfar', 'tasbih', 'bad_dream'].includes(c.id)
+);
 
 export default function AthkarPage() {
-  const [selectedCategory, setSelectedCategory] = useState<CategoryKey | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<AthkarCategory | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCategories = searchQuery 
+    ? athkarCategories.filter(c => 
+        c.name.includes(searchQuery) || 
+        c.items.some(item => item.text.includes(searchQuery))
+      )
+    : null;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -74,88 +82,192 @@ export default function AthkarPage() {
               </div>
             </div>
 
-            {/* Smart Tasbih Counter */}
-            <div className="px-4 mb-6">
-              <Link href="/tasbih">
-                <Card className="bg-gradient-to-l from-primary to-primary/90 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
-                      📿
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg">عداد التسبيح الذكي</h3>
-                      <p className="text-sm opacity-80">باللمس أو هز الجوال</p>
-                    </div>
-                    <ChevronLeft className="h-6 w-6 opacity-70" />
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
-
-            {/* Dua by Mood */}
-            <div className="px-4 mb-6">
-              <Link href="/dua-mood">
-                <Card className="bg-gradient-to-l from-purple-600 to-purple-700 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
-                      🤲
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg">دعاء حسب حالتك</h3>
-                      <p className="text-sm opacity-80">قلق • حزن • فرح • قرار مهم</p>
-                    </div>
-                    <ChevronLeft className="h-6 w-6 opacity-70" />
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
-
-            {/* Icon Categories Grid */}
-            <div className="px-4 mb-6">
-              <h2 className="font-bold text-foreground mb-3">أذكار اليوم</h2>
-              <div className="grid grid-cols-3 gap-3">
-                {categories.map((cat) => (
-                  <Card 
-                    key={cat.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow bg-card"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    data-testid={`card-athkar-${cat.id}`}
-                  >
-                    <CardContent className="p-3 text-center">
-                      <div className={`w-10 h-10 mx-auto mb-2 rounded-lg ${cat.color} flex items-center justify-center text-xl`}>
-                        {cat.icon}
-                      </div>
-                      <h3 className="font-medium text-foreground text-xs">{cat.label}</h3>
-                    </CardContent>
-                  </Card>
-                ))}
+            {searchQuery && filteredCategories ? (
+              <div className="px-4">
+                <h2 className="font-bold text-foreground mb-3">نتائج البحث ({filteredCategories.length})</h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {filteredCategories.map((cat) => (
+                    <Card 
+                      key={cat.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                      onClick={() => setSelectedCategory(cat)}
+                      data-testid={`card-athkar-${cat.id}`}
+                    >
+                      <CardContent className="p-3 text-center">
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                          {cat.icon}
+                        </div>
+                        <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Smart Tasbih Counter */}
+                <div className="px-4 mb-6">
+                  <Link href="/tasbih">
+                    <Card className="bg-gradient-to-l from-[#709046] to-[#5a7338] text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                          📿
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">عداد التسبيح الذكي</h3>
+                          <p className="text-sm opacity-80">باللمس أو هز الجوال</p>
+                        </div>
+                        <ChevronLeft className="h-6 w-6 opacity-70" />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
 
-            {/* Contextual Athkar */}
-            <div className="px-4">
-              <h2 className="font-bold text-foreground mb-3">أذكار حسب الوقت والمكان</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {contextCategories.map((cat) => (
-                  <Card 
-                    key={cat.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow bg-card"
-                    data-testid={`card-context-${cat.id}`}
-                  >
-                    <CardContent className="p-3 text-center">
-                      <span className="text-2xl block mb-1">{cat.icon}</span>
-                      <h3 className="font-medium text-foreground text-sm">{cat.label}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">{cat.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                {/* Dua by Mood */}
+                <div className="px-4 mb-6">
+                  <Link href="/dua-mood">
+                    <Card className="bg-gradient-to-l from-[#f4b360] to-[#e09840] text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                          🤲
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">دعاء حسب حالتك</h3>
+                          <p className="text-sm opacity-80">قلق • حزن • فرح • قرار مهم</p>
+                        </div>
+                        <ChevronLeft className="h-6 w-6 opacity-70" />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+
+                {/* Daily Athkar */}
+                <div className="px-4 mb-6">
+                  <h2 className="font-bold text-foreground mb-3">أذكار اليوم</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {dailyCategories.map((cat) => (
+                      <Card 
+                        key={cat.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                        onClick={() => setSelectedCategory(cat)}
+                        data-testid={`card-athkar-${cat.id}`}
+                      >
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Prayer Athkar */}
+                <div className="px-4 mb-6">
+                  <h2 className="font-bold text-foreground mb-3">أذكار الصلاة والوضوء</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {prayerCategories.slice(0, 9).map((cat) => (
+                      <Card 
+                        key={cat.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                        onClick={() => setSelectedCategory(cat)}
+                        data-testid={`card-athkar-${cat.id}`}
+                      >
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {prayerCategories.length > 9 && (
+                    <ExpandableSection title="المزيد من أذكار الصلاة" categories={prayerCategories.slice(9)} onSelect={setSelectedCategory} />
+                  )}
+                </div>
+
+                {/* Life Athkar */}
+                <div className="px-4 mb-6">
+                  <h2 className="font-bold text-foreground mb-3">أذكار الحياة اليومية</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {lifeCategories.slice(0, 9).map((cat) => (
+                      <Card 
+                        key={cat.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                        onClick={() => setSelectedCategory(cat)}
+                        data-testid={`card-athkar-${cat.id}`}
+                      >
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {lifeCategories.length > 9 && (
+                    <ExpandableSection title="المزيد من أذكار الحياة" categories={lifeCategories.slice(9)} onSelect={setSelectedCategory} />
+                  )}
+                </div>
+
+                {/* Emotional/Distress Athkar */}
+                <div className="px-4 mb-6">
+                  <h2 className="font-bold text-foreground mb-3">أذكار الهم والكرب</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {emotionalCategories.slice(0, 9).map((cat) => (
+                      <Card 
+                        key={cat.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                        onClick={() => setSelectedCategory(cat)}
+                        data-testid={`card-athkar-${cat.id}`}
+                      >
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {emotionalCategories.length > 9 && (
+                    <ExpandableSection title="المزيد" categories={emotionalCategories.slice(9)} onSelect={setSelectedCategory} />
+                  )}
+                </div>
+
+                {/* Special Occasions */}
+                <div className="px-4 mb-6">
+                  <h2 className="font-bold text-foreground mb-3">أذكار المناسبات والأحوال</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {specialCategories.slice(0, 9).map((cat) => (
+                      <Card 
+                        key={cat.id}
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                        onClick={() => setSelectedCategory(cat)}
+                        data-testid={`card-athkar-${cat.id}`}
+                      >
+                        <CardContent className="p-3 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {specialCategories.length > 9 && (
+                    <ExpandableSection title="المزيد من الأذكار" categories={specialCategories.slice(9)} onSelect={setSelectedCategory} />
+                  )}
+                </div>
+              </>
+            )}
           </motion.div>
         ) : (
           <AthkarDetail 
             category={selectedCategory} 
-            data={athkarData[selectedCategory]} 
             onBack={() => setSelectedCategory(null)} 
           />
         )}
@@ -164,23 +276,63 @@ export default function AthkarPage() {
   );
 }
 
-function AthkarDetail({ category, data, onBack }: { category: string, data: typeof athkarData['morning'], onBack: () => void }) {
+function ExpandableSection({ title, categories, onSelect }: { title: string; categories: AthkarCategory[]; onSelect: (cat: AthkarCategory) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!expanded) {
+    return (
+      <Button 
+        variant="ghost" 
+        className="w-full mt-2 text-primary"
+        onClick={() => setExpanded(true)}
+      >
+        {title} ({categories.length})
+      </Button>
+    );
+  }
+  
+  return (
+    <div className="grid grid-cols-3 gap-3 mt-3">
+      {categories.map((cat) => (
+        <Card 
+          key={cat.id}
+          className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+          onClick={() => onSelect(cat)}
+          data-testid={`card-athkar-${cat.id}`}
+        >
+          <CardContent className="p-3 text-center">
+            <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: `${cat.color}30` }}>
+              {cat.icon}
+            </div>
+            <h3 className="font-medium text-foreground text-xs line-clamp-2">{cat.name}</h3>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function AthkarDetail({ category, onBack }: { category: AthkarCategory; onBack: () => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [counter, setCounter] = useState(data[0].count);
+  const [counter, setCounter] = useState(category.items[0]?.count || 1);
   const { toast } = useToast();
 
-  const currentThikr = data[currentIndex];
+  const currentThikr = category.items[currentIndex];
   
   useEffect(() => {
-    setCounter(currentThikr.count);
+    if (currentThikr) {
+      setCounter(currentThikr.count);
+    }
   }, [currentIndex, currentThikr]);
 
   const handleTap = () => {
+    if (!currentThikr) return;
+    
     if (counter > 1) {
       setCounter(c => c - 1);
       if (navigator.vibrate) navigator.vibrate(5);
     } else {
-      if (currentIndex < data.length - 1) {
+      if (currentIndex < category.items.length - 1) {
         setCurrentIndex(c => c + 1);
         if (navigator.vibrate) navigator.vibrate(20);
       } else {
@@ -191,11 +343,20 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
   };
 
   const copyText = () => {
-    navigator.clipboard.writeText(currentThikr.text);
-    toast({ description: "تم نسخ الذكر" });
+    if (currentThikr) {
+      navigator.clipboard.writeText(currentThikr.text);
+      toast({ description: "تم نسخ الذكر" });
+    }
   };
 
-  const categoryLabel = categories.find(c => c.id === category)?.label || "";
+  if (!currentThikr) {
+    return (
+      <div className="p-4 text-center">
+        <p>لا توجد أذكار في هذه الفئة</p>
+        <Button onClick={onBack} className="mt-4">العودة</Button>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -210,9 +371,9 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full" data-testid="btn-athkar-back">
           <ArrowRight className="h-6 w-6" />
         </Button>
-        <h2 className="text-lg font-bold text-foreground flex-1">{categoryLabel}</h2>
+        <h2 className="text-lg font-bold text-foreground flex-1 line-clamp-1">{category.name}</h2>
         <div className="bg-primary/10 text-primary px-3 py-1 rounded-full font-mono text-sm" data-testid="text-athkar-progress">
-          {currentIndex + 1} / {data.length}
+          {currentIndex + 1} / {category.items.length}
         </div>
       </header>
 
@@ -224,9 +385,13 @@ function AthkarDetail({ category, data, onBack }: { category: string, data: type
           data-testid="card-thikr"
         >
           <CardContent className="p-6 h-full flex flex-col justify-center items-center text-center">
-            <p className="text-xl leading-relaxed font-serif arabic-text text-foreground mb-6" data-testid="text-thikr">
+            <p className="text-xl leading-relaxed font-serif arabic-text text-foreground mb-4" data-testid="text-thikr">
               {currentThikr.text}
             </p>
+            
+            {currentThikr.source && (
+              <p className="text-xs text-muted-foreground mb-4">📚 {currentThikr.source}</p>
+            )}
             
             {/* Counter */}
             <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold shadow-lg" data-testid="text-counter">
