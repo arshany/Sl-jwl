@@ -114,7 +114,7 @@ export default function QuranIndex() {
          </Link>
       )}
 
-      <Card className="bg-gradient-to-l from-emerald-600 to-emerald-700 text-white overflow-hidden mb-6">
+      <Card className="bg-gradient-to-l from-[#709046] to-[#5a7338] text-white overflow-hidden mb-6">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

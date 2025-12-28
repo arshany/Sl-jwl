@@ -483,7 +483,7 @@ export default function HomePage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="bg-gradient-to-l from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 text-center">
+                  <div className="bg-gradient-to-l from-[#bedbe8]/30 to-[#bbac92]/20 dark:from-[#709046]/20 dark:to-[#bbac92]/10 rounded-xl p-4 text-center">
                     <p className="text-lg font-serif text-foreground leading-relaxed mb-2" data-testid="text-suggested-dua">
                       {duaByMood[selectedFeeling as keyof typeof duaByMood].duas[0].text}
                     </p>
@@ -500,7 +500,7 @@ export default function HomePage() {
 
       {/* Divine Message */}
       <div className="px-4 mb-6">
-        <Card className="bg-gradient-to-l from-indigo-600 to-indigo-700 text-white shadow-lg overflow-hidden">
+        <Card className="bg-gradient-to-l from-[#f4b360] to-[#e09840] text-white shadow-lg overflow-hidden">
           <CardContent className="p-4 text-center">
             <span className="text-3xl block mb-3">💫</span>
             <p className="text-lg font-serif leading-relaxed mb-2" data-testid="text-divine-message">
@@ -520,16 +520,16 @@ export default function HomePage() {
               <button
                 onClick={() => toggleHasanat('prayed')}
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                  todayHasanat.prayed ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                  todayHasanat.prayed ? 'bg-[#709046]/20 dark:bg-[#709046]/30' : 'bg-muted'
                 }`}
                 data-testid="btn-hasanat-prayed"
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                  todayHasanat.prayed ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                  todayHasanat.prayed ? 'bg-[#709046] text-white' : 'bg-muted-foreground/20'
                 }`}>
                   {todayHasanat.prayed ? '✓' : '🕌'}
                 </div>
-                <span className={`text-xs font-medium ${todayHasanat.prayed ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                <span className={`text-xs font-medium ${todayHasanat.prayed ? 'text-[#709046] dark:text-[#8ab05a]' : 'text-muted-foreground'}`}>
                   صليت
                 </span>
               </button>
@@ -537,16 +537,16 @@ export default function HomePage() {
               <button
                 onClick={() => toggleHasanat('read')}
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                  todayHasanat.read ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                  todayHasanat.read ? 'bg-[#709046]/20 dark:bg-[#709046]/30' : 'bg-muted'
                 }`}
                 data-testid="btn-hasanat-read"
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                  todayHasanat.read ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                  todayHasanat.read ? 'bg-[#709046] text-white' : 'bg-muted-foreground/20'
                 }`}>
                   {todayHasanat.read ? '✓' : '📖'}
                 </div>
-                <span className={`text-xs font-medium ${todayHasanat.read ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                <span className={`text-xs font-medium ${todayHasanat.read ? 'text-[#709046] dark:text-[#8ab05a]' : 'text-muted-foreground'}`}>
                   قرأت
                 </span>
               </button>
@@ -554,16 +554,16 @@ export default function HomePage() {
               <button
                 onClick={() => toggleHasanat('remembered')}
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                  todayHasanat.remembered ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'
+                  todayHasanat.remembered ? 'bg-[#709046]/20 dark:bg-[#709046]/30' : 'bg-muted'
                 }`}
                 data-testid="btn-hasanat-remembered"
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                  todayHasanat.remembered ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20'
+                  todayHasanat.remembered ? 'bg-[#709046] text-white' : 'bg-muted-foreground/20'
                 }`}>
                   {todayHasanat.remembered ? '✓' : '📿'}
                 </div>
-                <span className={`text-xs font-medium ${todayHasanat.remembered ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                <span className={`text-xs font-medium ${todayHasanat.remembered ? 'text-[#709046] dark:text-[#8ab05a]' : 'text-muted-foreground'}`}>
                   ذكرت
                 </span>
               </button>
@@ -577,7 +577,7 @@ export default function HomePage() {
 
       {/* Continue Reading Quran */}
       <div className="px-4 mb-6">
-        <Card className="bg-gradient-to-l from-[#5B8A51] to-[#4A7A45] text-white overflow-hidden">
+        <Card className="bg-gradient-to-l from-[#709046] to-[#5a7338] text-white overflow-hidden">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex-1">
               <p className="text-sm opacity-90 mb-1">متابعة المصحف</p>

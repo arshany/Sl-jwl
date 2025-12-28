@@ -7,12 +7,12 @@ import { useLocalStorage } from "@/lib/use-local-storage";
 import { Link } from "wouter";
 
 const tasbihat = [
-  { text: "سُبْحَانَ اللَّهِ", target: 33, color: "from-emerald-500 to-emerald-600" },
-  { text: "الْحَمْدُ لِلَّهِ", target: 33, color: "from-amber-500 to-amber-600" },
-  { text: "اللَّهُ أَكْبَرُ", target: 34, color: "from-blue-500 to-blue-600" },
-  { text: "لَا إِلَٰهَ إِلَّا اللَّهُ", target: 100, color: "from-purple-500 to-purple-600" },
-  { text: "أَسْتَغْفِرُ اللَّهَ", target: 100, color: "from-teal-500 to-teal-600" },
-  { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", target: 100, color: "from-rose-500 to-rose-600" },
+  { text: "سُبْحَانَ اللَّهِ", target: 33, color: "from-[#709046] to-[#5a7338]" },
+  { text: "الْحَمْدُ لِلَّهِ", target: 33, color: "from-[#f4b360] to-[#e09840]" },
+  { text: "اللَّهُ أَكْبَرُ", target: 34, color: "from-[#bedbe8] to-[#9bc5d6]" },
+  { text: "لَا إِلَٰهَ إِلَّا اللَّهُ", target: 100, color: "from-[#bbac92] to-[#a69778]" },
+  { text: "أَسْتَغْفِرُ اللَّهَ", target: 100, color: "from-[#709046] to-[#5a7338]" },
+  { text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", target: 100, color: "from-[#f4b360] to-[#e09840]" },
 ];
 
 export default function TasbihPage() {

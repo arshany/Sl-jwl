@@ -13,12 +13,12 @@ import { Link } from "wouter";
 type CategoryKey = keyof typeof athkarData;
 
 const categories: { id: CategoryKey; label: string; icon: string; color: string }[] = [
-  { id: 'morning', label: 'أذكار الصباح', icon: '☀️', color: 'bg-amber-100' },
-  { id: 'evening', label: 'أذكار المساء', icon: '🌙', color: 'bg-indigo-100' },
-  { id: 'prayer', label: 'أذكار الصلاة', icon: '🕌', color: 'bg-emerald-100' },
-  { id: 'waking', label: 'أذكار بعد الصلاة', icon: '🤲', color: 'bg-teal-100' },
-  { id: 'sleep', label: 'أذكار النوم', icon: '🛏️', color: 'bg-purple-100' },
-  { id: 'travel', label: 'أذكار السفر', icon: '✈️', color: 'bg-blue-100' },
+  { id: 'morning', label: 'أذكار الصباح', icon: '☀️', color: 'bg-[#f4b360]/30' },
+  { id: 'evening', label: 'أذكار المساء', icon: '🌙', color: 'bg-[#bedbe8]/50' },
+  { id: 'prayer', label: 'أذكار الصلاة', icon: '🕌', color: 'bg-[#709046]/20' },
+  { id: 'waking', label: 'أذكار بعد الصلاة', icon: '🤲', color: 'bg-[#bbac92]/30' },
+  { id: 'sleep', label: 'أذكار النوم', icon: '🛏️', color: 'bg-[#bedbe8]/40' },
+  { id: 'travel', label: 'أذكار السفر', icon: '✈️', color: 'bg-[#f4b360]/20' },
 ];
 
 const contextCategories = Object.entries(contextualAthkar).map(([key, value]) => ({
