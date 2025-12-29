@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, Copy, Hand } from "lucide-react";
+import { ArrowRight, Search, Settings, Bookmark, Heart, ChevronLeft, ChevronRight, Copy, Hand } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { athkarCategories, type AthkarCategory, type Dhikr } from "@/lib/athkar-data";
 import { useToast } from "@/hooks/use-toast";
@@ -402,11 +402,62 @@ function AthkarDetail({ category, onBack }: { category: AthkarCategory; onBack: 
         </Card>
 
         {/* Actions */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex justify-center gap-4 mb-4">
           <Button variant="outline" size="icon" className="rounded-full" onClick={copyText} data-testid="btn-copy-thikr">
             <Copy className="h-5 w-5" />
           </Button>
         </div>
+
+        {/* Navigation Arrows */}
+        {category.items.length > 1 && (
+          <div className="flex items-center justify-between px-4 pb-6">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="rounded-full w-14 h-14 shadow-md"
+              onClick={() => {
+                if (currentIndex < category.items.length - 1) {
+                  setCurrentIndex(c => c + 1);
+                }
+              }}
+              disabled={currentIndex >= category.items.length - 1}
+              data-testid="btn-next-thikr"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+
+            <div className="flex flex-col items-center">
+              <div className="flex gap-1">
+                {category.items.map((_, idx) => (
+                  <div 
+                    key={idx}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      idx === currentIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {currentIndex + 1} من {category.items.length}
+              </p>
+            </div>
+
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="rounded-full w-14 h-14 shadow-md"
+              onClick={() => {
+                if (currentIndex > 0) {
+                  setCurrentIndex(c => c - 1);
+                }
+              }}
+              disabled={currentIndex <= 0}
+              data-testid="btn-prev-thikr"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
