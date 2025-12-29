@@ -234,9 +234,11 @@ export function QuranReader({ params }: { params: { id: string } }) {
   const [readingTimer, setReadingTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
 
-  if (surah && (!lastRead || lastRead.surah !== id)) {
+  useEffect(() => {
+    if (surah) {
       setLastRead({ surah: id, name: surah.name });
-  }
+    }
+  }, [id, surah?.name]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
