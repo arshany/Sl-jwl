@@ -13,7 +13,8 @@ import { Link } from "wouter";
 import { getDirectionsUrl } from "@/lib/mosque-finder";
 import { toPng } from "html-to-image";
 import { divineMessages, duaByMood } from "@/lib/spiritual-data";
-import { requestNotificationPermission, getNotificationPermission, schedulePrayerNotification, isPWAInstalled } from "@/lib/notifications";
+import { requestNotificationPermission, getNotificationPermission, schedulePrayerNotification, scheduleBeforePrayerNotification, scheduleAfterPrayerNotification, scheduleDailyNotification, scheduleWeeklyNotification, checkAndShowDailyNotifications, cancelScheduledNotifications, isPWAInstalled } from "@/lib/notifications";
+import { type NotificationSettings, defaultNotificationSettings } from "@/pages/notification-settings";
 
 const dailyVerses = [
   { text: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ", surah: "الزمر: 53", tafsir: "يخاطب الله عباده الذين أكثروا من الذنوب ألا يفقدوا الأمل في رحمته، فهو يغفر جميع الذنوب لمن تاب." },
@@ -83,6 +84,8 @@ export default function HomePage() {
   const verseImageRef = useRef<HTMLDivElement>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [showNotificationBanner, setShowNotificationBanner] = useLocalStorage('show-notification-banner', true);
+  const [notifSettings] = useLocalStorage<NotificationSettings>('notification-settings', defaultNotificationSettings);
+  const [lastScheduledDate, setLastScheduledDate] = useLocalStorage<string>('last-scheduled-date', '');
 
   useEffect(() => {
     const permission = getNotificationPermission();
@@ -90,22 +93,68 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (prayerTimes && notificationPermission === 'granted') {
-      const prayersList = [
-        { name: 'fajr', time: prayerTimes.fajr },
-        { name: 'dhuhr', time: prayerTimes.dhuhr },
-        { name: 'asr', time: prayerTimes.asr },
-        { name: 'maghrib', time: prayerTimes.maghrib },
-        { name: 'isha', time: prayerTimes.isha },
-      ];
+    if (!prayerTimes || notificationPermission !== 'granted' || !notifSettings.enabled) return;
 
+    cancelScheduledNotifications();
+
+    const prayersList = [
+      { name: 'fajr', time: prayerTimes.fajr },
+      { name: 'dhuhr', time: prayerTimes.dhuhr },
+      { name: 'asr', time: prayerTimes.asr },
+      { name: 'maghrib', time: prayerTimes.maghrib },
+      { name: 'isha', time: prayerTimes.isha },
+    ];
+
+    if (notifSettings.prayer.enabled) {
       prayersList.forEach(prayer => {
-        if (settings.notifications[prayer.name] === 'sound' || settings.notifications[prayer.name] === 'vibrate') {
-          schedulePrayerNotification(prayer.name, prayer.time);
+        const prayerMode = notifSettings.prayer.perPrayer[prayer.name] || notifSettings.prayer.mode;
+        if (prayerMode !== 'silent') {
+          if (notifSettings.prayer.beforeMinutes > 0) {
+            scheduleBeforePrayerNotification(prayer.name, prayer.time, notifSettings.prayer.beforeMinutes);
+          }
+          if (notifSettings.prayer.atTime) {
+            schedulePrayerNotification(prayer.name, prayer.time);
+          }
+          if (notifSettings.prayer.afterPrayer) {
+            scheduleAfterPrayerNotification(prayer.name, prayer.time);
+          }
         }
       });
     }
-  }, [prayerTimes, notificationPermission, settings.notifications]);
+
+    if (notifSettings.athkar.enabled) {
+      if (notifSettings.athkar.morning) {
+        scheduleDailyNotification('morning', 6, 0);
+      }
+      if (notifSettings.athkar.evening) {
+        scheduleDailyNotification('evening', 17, 0);
+      }
+    }
+
+    if (notifSettings.quran?.enabled) {
+      scheduleDailyNotification('quran', 20, 0);
+    }
+
+    if (notifSettings.weekly.enabled) {
+      if (notifSettings.weekly.friday) {
+        scheduleWeeklyNotification('friday', 11);
+      }
+      if (notifSettings.weekly.mondayThursday) {
+        scheduleWeeklyNotification('mondayThursday', 5);
+      }
+      if (notifSettings.weekly.weeklyReview) {
+        scheduleWeeklyNotification('weeklyReview', 20);
+      }
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (lastScheduledDate !== todayStr) {
+      if (notifSettings.monthly.enabled || notifSettings.occasions.enabled) {
+        checkAndShowDailyNotifications(notifSettings.hijriAdjustment);
+      }
+      setLastScheduledDate(todayStr);
+    }
+  }, [prayerTimes, notificationPermission, notifSettings, settings.notifications]);
 
   const handleEnableNotifications = async () => {
     const permission = await requestNotificationPermission();

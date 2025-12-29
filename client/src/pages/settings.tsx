@@ -100,6 +100,14 @@ export default function SettingsPage() {
         <h2 className="text-primary font-bold mb-3 text-center">التنبيهات</h2>
         <Card className="bg-card shadow-sm">
           <CardContent className="p-0 divide-y divide-border">
+            <Link href="/settings/notifications">
+              <SettingRow 
+                icon={<Bell className="h-5 w-5 text-primary" />}
+                label="إعدادات التنبيهات"
+                hasChevron
+                data-testid="setting-notifications"
+              />
+            </Link>
             <SettingRow 
               icon={<Bell className="h-5 w-5 text-primary" />}
               label="الآذان"
@@ -158,7 +166,7 @@ export default function SettingsPage() {
 
       {/* App Info Section */}
       <div className="px-4 mb-6">
-        <h2 className="text-primary font-bold mb-3 text-center">صلاة تايم</h2>
+        <h2 className="text-primary font-bold mb-3 text-center">أقم</h2>
         <Card className="bg-card shadow-sm">
           <CardContent className="p-0 divide-y divide-border">
             <SettingRow 

@@ -13,6 +13,7 @@ import TasbihPage from "@/pages/tasbih";
 import DuaMoodPage from "@/pages/dua-mood";
 import PrivacyPage from "@/pages/privacy";
 import AboutPage from "@/pages/about";
+import NotificationSettingsPage from "@/pages/notification-settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/tasbih" component={TasbihPage} />
       <Route path="/dua-mood" component={DuaMoodPage} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/settings/notifications" component={NotificationSettingsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/about" component={AboutPage} />
       <Route component={NotFound} />
