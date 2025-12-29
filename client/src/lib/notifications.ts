@@ -54,21 +54,7 @@ export async function showNotification(title: string, body: string, tag?: string
   }
 }
 
-export function scheduleNotification(title: string, body: string, delayMs: number, tag?: string): void {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: 'SCHEDULE_NOTIFICATION',
-      title,
-      body,
-      delay: delayMs,
-      tag
-    });
-  } else {
-    setTimeout(() => {
-      showNotification(title, body, tag);
-    }, delayMs);
-  }
-}
+const scheduledTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
 export function schedulePrayerNotification(
   prayerName: string,
@@ -77,7 +63,7 @@ export function schedulePrayerNotification(
 ): void {
   const delay = prayerTime.getTime() - currentTime.getTime();
   
-  if (delay > 0) {
+  if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
     const prayerNames: Record<string, string> = {
       fajr: 'الفجر',
       sunrise: 'الشروق',
@@ -88,22 +74,30 @@ export function schedulePrayerNotification(
     };
     
     const arabicName = prayerNames[prayerName] || prayerName;
+    const tag = `prayer-${prayerName}`;
     
-    scheduleNotification(
-      `حان وقت صلاة ${arabicName}`,
-      'حي على الصلاة، حي على الفلاح',
-      delay,
-      `prayer-${prayerName}`
-    );
+    if (scheduledTimers.has(tag)) {
+      clearTimeout(scheduledTimers.get(tag)!);
+    }
+    
+    const timerId = setTimeout(() => {
+      showNotification(
+        `حان وقت صلاة ${arabicName}`,
+        'حي على الصلاة، حي على الفلاح',
+        tag
+      );
+      scheduledTimers.delete(tag);
+    }, delay);
+    
+    scheduledTimers.set(tag, timerId);
   }
 }
 
 export function cancelScheduledNotifications(): void {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: 'CANCEL_ALL_NOTIFICATIONS'
-    });
-  }
+  scheduledTimers.forEach((timerId) => {
+    clearTimeout(timerId);
+  });
+  scheduledTimers.clear();
 }
 
 export function isPWAInstalled(): boolean {

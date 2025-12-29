@@ -1,14 +1,14 @@
-const CACHE_NAME = 'aqim-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/favicon.png'
-];
+const CACHE_NAME = 'aqim-v2';
+const STATIC_CACHE = 'aqim-static-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.addAll([
+        '/',
+        '/favicon.png',
+        '/manifest.json'
+      ]))
   );
   self.skipWaiting();
 });
@@ -18,7 +18,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
             return caches.delete(cacheName);
           }
         })
@@ -29,14 +29,31 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') return;
+
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
         }
-        return fetch(event.request);
-      })
+        return networkResponse;
+      }).catch(() => {
+        return cachedResponse;
+      });
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
 
@@ -77,19 +94,17 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SCHEDULE_NOTIFICATION') {
-    const { title, body, delay, tag } = event.data;
-    setTimeout(() => {
-      self.registration.showNotification(title, {
-        body,
-        icon: '/favicon.png',
-        badge: '/favicon.png',
-        vibrate: [200, 100, 200],
-        tag: tag || 'scheduled-notification',
-        requireInteraction: true,
-        dir: 'rtl',
-        lang: 'ar'
-      });
-    }, delay);
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, tag } = event.data;
+    self.registration.showNotification(title, {
+      body,
+      icon: '/favicon.png',
+      badge: '/favicon.png',
+      vibrate: [200, 100, 200],
+      tag: tag || 'aqim-notification',
+      requireInteraction: true,
+      dir: 'rtl',
+      lang: 'ar'
+    });
   }
 });

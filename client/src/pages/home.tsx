@@ -2,7 +2,7 @@ import { usePrayer } from "@/lib/prayer-context";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, RefreshCw, ChevronLeft, Share2, Compass, MapPin, Navigation, Loader2, Check, Sun, Moon, HandHeart, BookOpen, Info, Download, CheckCircle2 } from "lucide-react";
+import { Settings, RefreshCw, ChevronLeft, Share2, Compass, MapPin, Navigation, Loader2, Check, Sun, Moon, HandHeart, BookOpen, Info, Download, CheckCircle2, Bell, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import { getDirectionsUrl } from "@/lib/mosque-finder";
 import { toPng } from "html-to-image";
 import { divineMessages, duaByMood } from "@/lib/spiritual-data";
+import { requestNotificationPermission, getNotificationPermission, schedulePrayerNotification, isPWAInstalled } from "@/lib/notifications";
 
 const dailyVerses = [
   { text: "قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ", surah: "الزمر: 53", tafsir: "يخاطب الله عباده الذين أكثروا من الذنوب ألا يفقدوا الأمل في رحمته، فهو يغفر جميع الذنوب لمن تاب." },
@@ -80,6 +81,39 @@ export default function HomePage() {
   const [showTafsir, setShowTafsir] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const verseImageRef = useRef<HTMLDivElement>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [showNotificationBanner, setShowNotificationBanner] = useLocalStorage('show-notification-banner', true);
+
+  useEffect(() => {
+    const permission = getNotificationPermission();
+    setNotificationPermission(permission);
+  }, []);
+
+  useEffect(() => {
+    if (prayerTimes && notificationPermission === 'granted') {
+      const prayersList = [
+        { name: 'fajr', time: prayerTimes.fajr },
+        { name: 'dhuhr', time: prayerTimes.dhuhr },
+        { name: 'asr', time: prayerTimes.asr },
+        { name: 'maghrib', time: prayerTimes.maghrib },
+        { name: 'isha', time: prayerTimes.isha },
+      ];
+
+      prayersList.forEach(prayer => {
+        if (settings.notifications[prayer.name] === 'sound' || settings.notifications[prayer.name] === 'vibrate') {
+          schedulePrayerNotification(prayer.name, prayer.time);
+        }
+      });
+    }
+  }, [prayerTimes, notificationPermission, settings.notifications]);
+
+  const handleEnableNotifications = async () => {
+    const permission = await requestNotificationPermission();
+    setNotificationPermission(permission);
+    if (permission === 'granted') {
+      setShowNotificationBanner(false);
+    }
+  };
 
   const dayOfYear = getDayOfYear();
   const todayDate = getDateString();
@@ -204,6 +238,44 @@ export default function HomePage() {
         </div>
         <h1 className="text-xl font-bold text-primary" data-testid="text-page-title">الرئيسية</h1>
       </header>
+
+      {/* Notification Permission Banner */}
+      {showNotificationBanner && notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
+        <div className="px-4 mb-4">
+          <Card className="bg-gradient-to-l from-[#bedbe8] to-[#a8cdd9] shadow-sm overflow-hidden">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0">
+                  <Bell className="h-5 w-5 text-[#2d5a7b]" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-[#2d5a7b] text-sm">تفعيل تنبيهات الصلاة</p>
+                  <p className="text-xs text-[#2d5a7b]/70">احصل على إشعارات عند دخول وقت الصلاة</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    className="bg-[#709046] hover:bg-[#5a7338] text-white text-xs px-3"
+                    onClick={handleEnableNotifications}
+                    data-testid="btn-enable-notifications"
+                  >
+                    تفعيل
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-[#2d5a7b]/60 hover:text-[#2d5a7b]"
+                    onClick={() => setShowNotificationBanner(false)}
+                    data-testid="btn-dismiss-notifications"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Location Card */}
       <div className="px-4 mb-4">
