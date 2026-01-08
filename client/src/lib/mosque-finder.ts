@@ -14,11 +14,11 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
@@ -47,11 +47,19 @@ export function cacheMosque(mosque: NearestMosque): void {
 
 export async function findNearestMosque(lat: number, lng: number): Promise<NearestMosque | null> {
   const cached = getCachedMosque();
+
+  // Return cached result immediately if close enough and fresh
   if (cached) {
     const distanceFromCache = calculateDistance(lat, lng, cached.lat, cached.lng);
     if (distanceFromCache < 1 && Date.now() - cached.lastFetched < CACHE_DURATION) {
       return cached;
     }
+  }
+
+  // Offline check
+  if (!navigator.onLine) {
+    console.log('Offline: returning cached mosque data if available');
+    return cached || null;
   }
 
   try {
@@ -78,7 +86,7 @@ export async function findNearestMosque(lat: number, lng: number): Promise<Neare
     }
 
     const data = await response.json();
-    
+
     if (!data.elements || data.elements.length === 0) {
       return cached || null;
     }
@@ -89,11 +97,11 @@ export async function findNearestMosque(lat: number, lng: number): Promise<Neare
     for (const element of data.elements) {
       const mosqueLat = element.lat || element.center?.lat;
       const mosqueLng = element.lon || element.center?.lon;
-      
+
       if (!mosqueLat || !mosqueLng) continue;
 
       const distance = calculateDistance(lat, lng, mosqueLat, mosqueLng);
-      
+
       if (distance < minDistance) {
         minDistance = distance;
         const name = element.tags?.name || element.tags?.['name:ar'] || 'مسجد';

@@ -4,3 +4,20 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Android
+*.apk
+*.ap_
+*.aab
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/.externalNativeBuild
+android/.cxx
+
+# Keystore (IMPORTANT!)
+*.keystore
+*.jks
+*.p12
+*.pfx
